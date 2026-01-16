@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
+import 'package:siwatt_mobile/features/Auth/controllers/login_controller.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,6 +10,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _controller = Get.put(LoginController());
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -25,14 +26,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      // Form is valid, proceed with login
-      final email = _emailController.text;
-      final password = _passwordController.text;
-      
-      // TODO: Implement your login logic here
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login dengan email: $email')),
-      );
+      _controller.login(_emailController.text, _passwordController.text);
     }
   }
 
@@ -130,7 +124,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       Text('Ingat Saya', style: TextStyle(color: Colors.white)),
                       Spacer(),
-                      Text('Lupa Password?', style: TextStyle(color: Colors.white)),
+                      InkWell(
+                        onTap: () {
+                          Get.toNamed('/lupa-password');
+                        },
+                        child: Text('Lupa Password?', style: TextStyle(color: Colors.white))),
                       
                     ],
                   ),
@@ -153,8 +151,19 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: _handleLogin,
-                    child: Text('Masuk', style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      _handleLogin();
+                    },
+                    child: Obx(() => _controller.isLoading.value
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: colorScheme.primary,
+                              strokeWidth: 2,
+                            ))
+                        : Text('Masuk', style: TextStyle(fontSize: 16))),
                   ),
                 ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:siwatt_mobile/features/Auth/controllers/register_controller.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -9,9 +10,12 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final _controller = Get.put(RegisterController());
   final _formKey = GlobalKey<FormState>();
 
+
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -23,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -35,6 +40,16 @@ class _RegisterPageState extends State<RegisterPage> {
     }
     if (value.trim().length < 2) {
       return 'Nama minimal 2 karakter';
+    }
+    return null;
+  }
+
+  String? _validateUsername(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Username tidak boleh kosong';
+    }
+    if (value.trim().length < 4) {
+      return 'Username minimal 4 karakter';
     }
     return null;
   }
@@ -82,9 +97,11 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // TODO: implement register logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Daftar: ${_emailController.text.trim()}')),
+    _controller.register(
+      fullName: _nameController.text.trim(),
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
     );
   }
 
@@ -131,6 +148,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: const InputDecoration(
                         hintText: 'Nama',
                         prefixIcon: Icon(Icons.person_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text('Username', style: textStyle.titleMedium?.copyWith(color: Colors.white)),
+                    TextFormField(
+                      controller: _usernameController,
+                      textInputAction: TextInputAction.next,
+                      validator: _validateUsername,
+                      decoration: const InputDecoration(
+                        hintText: 'Username',
+                        prefixIcon: Icon(Icons.account_circle_outlined),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -248,13 +277,22 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _handleRegister,
+                      child: Obx(() => ElevatedButton(
+                        onPressed: _controller.isLoading.value ? null : _handleRegister,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF4A261),
                         ),
-                        child: const Text('Daftar', style: TextStyle(fontSize: 16)),
-                      ),
+                        child: _controller.isLoading.value
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Daftar', style: TextStyle(fontSize: 16)),
+                      )),
                     ),
                   ],
                 ),
