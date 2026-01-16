@@ -12,6 +12,7 @@ dependencies:
   get: ^4.7.3
   dio: ^5.7.0
   flutter_secure_storage: ^9.0.0
+  fl_chart: ^0.66.0
 
 dev_dependencies:
   flutter_test:
@@ -20,6 +21,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/icons/bottom_navigation/
+    - assets/icons/dashboard_card/
 
   fonts:
     - family: Poppins
