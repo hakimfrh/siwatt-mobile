@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
-import 'package:siwatt_mobile/features/Monitoring/models/monitoring_item.dart';
+import 'package:siwatt_mobile/features/monitoring/models/monitoring_item.dart';
 
 class MonitoringCard extends StatelessWidget {
   final MonitoringItem item;
@@ -90,11 +90,10 @@ class MonitoringCard extends StatelessWidget {
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 30, // Space for Y axis labels
+                    reservedSize: 35, // Increased space for Y axis labels with decimals
                      getTitlesWidget: (double value, TitleMeta meta) {
-                        // Customize based on value range if needed
                         return Text(
-                          value.toStringAsFixed(0),
+                          value.toStringAsFixed(1), // Show 1 decimal place
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 10,
@@ -106,12 +105,12 @@ class MonitoringCard extends StatelessWidget {
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true, // Show X axis ticks
-                    interval: 2, // Skip some labels
-                     getTitlesWidget: (initialValue, meta) {
+                    interval: 5, // Skip labels to avoid crowding (show every 5th)
+                     getTitlesWidget: (value, meta) {
                        return Padding(
                          padding: const EdgeInsets.only(top: 4.0),
                          child: Text(
-                             "", // Empty X axis labels to match simplified look, or add checks
+                             value.toInt().toString(), // Show datapoint index
                              style: const TextStyle(fontSize: 10, color: Colors.grey)
                          ),
                        );
@@ -127,9 +126,9 @@ class MonitoringCard extends StatelessWidget {
                 ),
               ),
               minX: 0,
-              maxX: (item.dataPoints.length - 1).toDouble(),
-              minY: item.dataPoints.reduce((a, b) => a < b ? a : b) * 0.9,
-              maxY: item.dataPoints.reduce((a, b) => a > b ? a : b) * 1.1,
+              maxX: item.dataPoints.isEmpty ? 10 : (item.dataPoints.length - 1).toDouble(),
+              minY: item.dataPoints.isEmpty ? 0 : item.dataPoints.reduce((a, b) => a < b ? a : b) * 0.9,
+              maxY: item.dataPoints.isEmpty ? 100 : item.dataPoints.reduce((a, b) => a > b ? a : b) * 1.1,
               lineBarsData: [
                 LineChartBarData(
                   spots: item.dataPoints
@@ -227,9 +226,9 @@ class MonitoringCard extends StatelessWidget {
                 titlesData: const FlTitlesData(show: false),
                 borderData: FlBorderData(show: false),
                 minX: 0,
-                maxX: (item.dataPoints.length - 1).toDouble(),
-                minY: item.dataPoints.reduce((a, b) => a < b ? a : b) * 0.9,
-                maxY: item.dataPoints.reduce((a, b) => a > b ? a : b) * 1.1,
+                maxX: item.dataPoints.isEmpty ? 10 : (item.dataPoints.length - 1).toDouble(),
+                minY: item.dataPoints.isEmpty ? 0 : item.dataPoints.reduce((a, b) => a < b ? a : b) * 0.9,
+                maxY: item.dataPoints.isEmpty ? 100 : item.dataPoints.reduce((a, b) => a > b ? a : b) * 1.1,
                 lineBarsData: [
                   LineChartBarData(
                     spots: item.dataPoints

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class MonitoringItem {
   final String title;
-  final String value;
+  String value;
   final String unit;
   final Color color;
   final IconData iconData;

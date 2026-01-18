@@ -1,15 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
-import 'package:siwatt_mobile/features/Auth/models/login_response_model.dart';
-import 'dart:convert';
+import 'package:siwatt_mobile/features/auth/models/login_response_model.dart';
+import 'package:siwatt_mobile/core/models/user_model.dart'; // Import user model
 
 class LoginController extends GetxController {
   final dio = Get.find<DioClient>().dio;
-  final storage = const FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage();
   
   var isLoading = false.obs;
 
@@ -17,7 +18,7 @@ class LoginController extends GetxController {
     isLoading.value = true;
     try {
       final response = await dio.post(
-        ApiUrl.login, // Sesuaikan endpoint jika berbeda
+        ApiUrl.login, 
         data: {
           'email': email,
           'password': password,
@@ -27,9 +28,12 @@ class LoginController extends GetxController {
       if (response.statusCode == 200) {
         final loginResponse = LoginResponse.fromJson(response.data);
         if (loginResponse.data != null) {
-          // Simpan token
-          await storage.write(key: 'token', value: loginResponse.data!.apiToken);
-          await storage.write(key: 'user', value: jsonEncode(loginResponse.data!.user.toJson()));
+          // Simpan token ke SecureStorage
+          await _storage.write(key: 'token', value: loginResponse.data!.apiToken);
+          
+          // Simpan user ke Hive
+          var userBox = Hive.box('userBox');
+          await userBox.put('user', loginResponse.data!.user);
 
           Get.snackbar('Sukses', loginResponse.message, backgroundColor: Colors.green, colorText: Colors.white);
           
@@ -58,9 +62,21 @@ class LoginController extends GetxController {
         Get.snackbar('Error', 'Koneksi gagal', backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
+       print(e);
        Get.snackbar('Error', 'Terjadi kesalahan tidak terduga', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> logout() async {
+    // Hapus token dari SecureStorage
+    await _storage.delete(key: 'token');
+    
+    // Hapus user dari Hive
+    var userBox = Hive.box('userBox');
+    await userBox.clear();
+    
+    Get.offAllNamed('/login');
   }
 }

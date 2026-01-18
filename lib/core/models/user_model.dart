@@ -1,7 +1,18 @@
-class User {
+import 'package:json_annotation/json_annotation.dart';
+import 'package:hive_ce/hive.dart';
+
+part 'user_model.g.dart';
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+@HiveType(typeId: 0)
+class User extends HiveObject {
+  @HiveField(0)
   final int id;
+  @HiveField(1)
   final String fullName;
+  @HiveField(2)
   final String username;
+  @HiveField(3)
   final String email;
 
   User({
@@ -11,21 +22,7 @@ class User {
     required this.email,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      fullName: json['full_name'],
-      username: json['username'],
-      email: json['email'],
-    );
-  }
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'full_name': fullName,
-      'username': username,
-      'email': email,
-    };
-  }
+  Map<String, dynamic> toJson() => _$UserToJson(this);
 }

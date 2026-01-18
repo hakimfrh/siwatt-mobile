@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:siwatt_mobile/features/Auth/controllers/register_controller.dart';
+import 'package:siwatt_mobile/features/auth/controllers/register_controller.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

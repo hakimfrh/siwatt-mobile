@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
-import 'package:siwatt_mobile/features/Auth/models/register_response_model.dart';
+import 'package:siwatt_mobile/features/auth/models/register_response_model.dart';
 
 class RegisterController extends GetxController {
   final dio = Get.find<DioClient>().dio;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:siwatt_mobile/features/Auth/controllers/login_controller.dart';
+import 'package:siwatt_mobile/features/auth/controllers/login_controller.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

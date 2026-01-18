@@ -1,27 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_themes.dart';
-import 'package:siwatt_mobile/features/Auth/pages/lupa_password.dart';
-import 'package:siwatt_mobile/features/Auth/pages/login.dart';
-import 'package:siwatt_mobile/features/Auth/pages/register.dart';
-import 'package:siwatt_mobile/features/Main/pages/main_wrapper.dart';
+import 'package:siwatt_mobile/features/auth/pages/lupa_password.dart';
+import 'package:siwatt_mobile/features/auth/pages/login.dart';
+import 'package:siwatt_mobile/features/auth/pages/register.dart';
+import 'package:siwatt_mobile/features/main/pages/main_wrapper.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
+import 'package:siwatt_mobile/core/models/user_model.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive
+  await Hive.initFlutter();
+  Hive.registerAdapter(UserAdapter());
+  await Hive.openBox('userBox');
+
+  // Check login status
+  const storage = FlutterSecureStorage();
+  String? token = await storage.read(key: 'token');
+  String initialRoute = token != null ? '/main' : '/login';
+
   await Get.putAsync(() => DioClient().init());
-  runApp(const MainApp());
+  runApp(MainApp(initialRoute: initialRoute));
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  final String initialRoute;
+  const MainApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       theme: siwattTheme(),
-      initialRoute: '/main',
+      initialRoute: initialRoute,
       getPages: [
         GetPage(name: '/login', page: () => const LoginPage()),
         GetPage(name: '/register', page: () => const RegisterPage()),
