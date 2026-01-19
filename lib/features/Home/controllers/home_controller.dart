@@ -3,18 +3,18 @@ import 'package:siwatt_mobile/core/models/devices_data.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/features/home/models/dashboardStats.dart';
+import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
 
 class HomeController extends GetxController {
   final dio = Get.find<DioClient>().dio;
   var isLoading = false.obs;
-  var deviceData = Rx<dynamic>(null);
   var todayDataList = <DeviceData>[].obs;
   var dashboardStats = Rx<DashboardStats?>(null);
 
   @override
   void onInit() {
     super.onInit();
-    refreshData();
+    refreshData(currentDeviceID: Get.find<MainController>().currentDevice.value?.id ?? 1);
   }
 
   Future<void> refreshData({int currentDeviceID = 1}) async {

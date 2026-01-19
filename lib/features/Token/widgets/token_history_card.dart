@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:siwatt_mobile/core/models/token_transaction.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
-import 'package:siwatt_mobile/features/token/models/token_transaction_model.dart';
 
 class TokenHistoryCard extends StatelessWidget {
-  final TokenTransactionModel item;
+  final TokenTransaction item;
 
   const TokenHistoryCard({super.key, required this.item});
 
@@ -35,7 +36,7 @@ class TokenHistoryCard extends StatelessWidget {
                       size: 14, color: SiwattColors.textSecondary),
                   const SizedBox(width: 6),
                   Text(
-                    "${item.date} ${item.time}",
+                    "${DateFormat('dd MMM yyyy - HH:mm').format(DateTime.parse(item.createdAt))}",
                     style: const TextStyle(
                       fontSize: 12,
                       color: SiwattColors.textSecondary,
@@ -45,7 +46,11 @@ class TokenHistoryCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                item.price,
+                NumberFormat.currency(
+                  locale: 'id_ID',
+                  symbol: 'Rp ',
+                  decimalDigits: 0,
+                ).format(double.tryParse(item.price) ?? 0),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -55,7 +60,7 @@ class TokenHistoryCard extends StatelessWidget {
             ],
           ),
           Text(
-            "${item.kwh} KwH",
+            "${item.amountKwh} KwH",
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,

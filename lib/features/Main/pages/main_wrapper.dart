@@ -27,97 +27,99 @@ class MainWrapper extends StatelessWidget {
         backgroundColor: SiwattColors.primary,
         // The leading icon (drawer menu) is automatically added by Scaffold when a drawer is present.
       ),
-      drawer: Drawer(
-        backgroundColor: colorScheme.primary,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,          
-            children: [
-              SizedBox(height: 16,),
-              Row(
-                children: [
-                  Text("Devices", style: textTheme.headlineLarge?.copyWith(color: Colors.white)),
-                Spacer(),
-                InkWell(
-                  onTap: () {
-                    
-                  },
-                  child: Icon(Icons.add, color: Colors.white,),
-                )
-                ],
-              ),
-              SizedBox(height: 24,),
-              Expanded(
-                child: Obx(() {
-                  if (controller.devices.isEmpty) {
-                    return const Center(child: Text("No devices found", style: TextStyle(color: Colors.white)));
-                  }
-                  return ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: controller.devices.length,
-                    itemBuilder: (context, index) {
-                      final device = controller.devices[index];
-                      return Obx(() {
-                        final isSelected = controller.currentDevice.value?.id == device.id;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: ListTile(
-                            onTap: () {
-                              controller.changeDevice(device);
-                              Get.back();
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            tileColor: isSelected 
-                                ? Colors.white.withOpacity(0.2) 
-                                : Colors.white.withOpacity(0.05),
-                            leading: const Icon(Icons.router, color: Colors.white),
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  device.deviceName,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'ID: ${device.deviceCode}',
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      });
+      
+      drawer: SafeArea(
+        child: Drawer(
+          backgroundColor: colorScheme.primary,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,          
+              children: [
+                Row(
+                  children: [
+                    Text("Devices", style: textTheme.headlineLarge?.copyWith(color: Colors.white)),
+                  Spacer(),
+                  InkWell(
+                    onTap: () {
+                      
                     },
-                  );
-                }),
-              ),
-              // Minimalist Logout Button
-              ListTile(
-                onTap: () {
-                   authController.logout();
-                },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                    child: Icon(Icons.add, color: Colors.white,),
+                  )
+                  ],
                 ),
-                tileColor: Colors.red.withOpacity(0.1),
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w600,
+                SizedBox(height: 24,),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.devices.isEmpty) {
+                      return const Center(child: Text("No devices found", style: TextStyle(color: Colors.white)));
+                    }
+                    return ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: controller.devices.length,
+                      itemBuilder: (context, index) {
+                        final device = controller.devices[index];
+                        return Obx(() {
+                          final isSelected = controller.currentDevice.value?.id == device.id;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: ListTile(
+                              onTap: () {
+                                controller.changeDevice(device);
+                                Get.back();
+                              },
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              tileColor: isSelected 
+                                  ? Colors.white.withOpacity(0.2) 
+                                  : Colors.white.withOpacity(0.05),
+                              leading: const Icon(Icons.router, color: Colors.white),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    device.deviceName,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'ID: ${device.deviceCode}',
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      color: Colors.white.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        });
+                      },
+                    );
+                  }),
+                ),
+                // Minimalist Logout Button
+                ListTile(
+                  onTap: () {
+                     authController.logout();
+                  },
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  tileColor: Colors.red.withOpacity(0.1),
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

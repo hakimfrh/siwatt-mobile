@@ -6,4 +6,5 @@ class ApiUrl {
   static const String devices = '/api/devices';
   static const String deviceData = '/api/data-hourly';
   static const String dashboardData = '/api/dashboard/stats';
+  static const String transactions = '/api/tokens/transactions';
 }
