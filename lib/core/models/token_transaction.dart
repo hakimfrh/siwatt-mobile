@@ -7,15 +7,21 @@ part 'token_transaction.g.dart';
 class TokenTransaction {
   int id;
   int deviceId;
+  String type;
   String amountKwh;
   String price;
+  String currentBalance;
+  String finalBalance;
   String createdAt;
 
   TokenTransaction({
     required this.id,
     required this.deviceId,
+    required this.type,
     required this.amountKwh,
     required this.price,
+    required this.currentBalance,
+    required this.finalBalance,
     required this.createdAt,
   });
 

@@ -9,7 +9,6 @@ import 'package:siwatt_mobile/features/auth/pages/register.dart';
 import 'package:siwatt_mobile/features/main/pages/main_wrapper.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/core/models/user_model.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

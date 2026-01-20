@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:siwatt_mobile/features/home/controllers/home_controller.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:siwatt_mobile/features/home/widgets/home_graph_section.dart';
 
 class HomePage extends StatefulWidget {
@@ -14,8 +13,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final HomeController controller = Get.put(HomeController());
-  String _selectedPeriod = 'Hari Ini';
-  String _selectedMetric = 'Energi';
+  final String _selectedPeriod = 'Hari Ini';
+  final String _selectedMetric = 'Energi';
 
   @override
   Widget build(BuildContext context) {

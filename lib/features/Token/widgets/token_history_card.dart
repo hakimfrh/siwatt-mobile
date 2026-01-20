@@ -10,19 +10,14 @@ class TokenHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 5, offset: const Offset(0, 2))],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -32,41 +27,64 @@ class TokenHistoryCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      size: 14, color: SiwattColors.textSecondary),
+                  const Icon(Icons.calendar_today_outlined, size: 14, color: SiwattColors.textSecondary),
                   const SizedBox(width: 6),
                   Text(
-                    "${DateFormat('dd MMM yyyy - HH:mm').format(DateTime.parse(item.createdAt))}",
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: SiwattColors.textSecondary,
-                    ),
+                    DateFormat('dd MMM yyyy - HH:mm').format(DateTime.parse(item.createdAt)),
+                    style: const TextStyle(fontSize: 12, color: SiwattColors.textSecondary),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                NumberFormat.currency(
-                  locale: 'id_ID',
-                  symbol: 'Rp ',
-                  decimalDigits: 0,
-                ).format(double.tryParse(item.price) ?? 0),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: SiwattColors.accentSuccess,
-                ),
+              Row(
+                children: [
+                  Text(
+                    "Total Token: ",
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black
+                    ),
+                  ),
+                  Text(
+                    "${double.tryParse(item.finalBalance)?.toStringAsFixed(2)} KwH",
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: SiwattColors.chartPower,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          Text(
-            "${item.amountKwh} KwH",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: SiwattColors.textPrimary,
-            ),
+          if (item.type == 'topup')...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                "+${double.tryParse(item.amountKwh)?.toStringAsFixed(2)} KwH",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: item.type =='topup'? SiwattColors.accentSuccess : SiwattColors.accentInfo),
+              ),
+              Text(
+                NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(double.tryParse(item.price) ?? 0),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: SiwattColors.textPrimary),
+              ),
+            ],
           ),
+          ]else...[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  "${double.tryParse(item.amountKwh)?.toStringAsFixed(2)} KwH",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: item.type =='topup'? SiwattColors.accentSuccess : SiwattColors.accentInfo),
+                ),
+                Text(
+                  "-",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: SiwattColors.textPrimary),
+                ),
+              ],
+            ),
+          ]
         ],
       ),
     );

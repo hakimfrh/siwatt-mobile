@@ -11,7 +11,7 @@ ThemeData siwattTheme() {
     colorScheme: ColorScheme.light(
       primary: SiwattColors.primary,
       secondary: SiwattColors.accentWarning,
-      background: SiwattColors.background,
+      surface: SiwattColors.background,
       error: SiwattColors.accentDanger,
     ),
 

@@ -6,7 +6,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/features/auth/models/login_response_model.dart';
-import 'package:siwatt_mobile/core/models/user_model.dart'; // Import user model
+// Import user model
 
 class LoginController extends GetxController {
   final dio = Get.find<DioClient>().dio;

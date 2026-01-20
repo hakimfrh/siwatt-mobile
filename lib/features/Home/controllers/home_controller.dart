@@ -8,7 +8,8 @@ import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
 class HomeController extends GetxController {
   final dio = Get.find<DioClient>().dio;
   var isLoading = false.obs;
-  var todayDataList = <DeviceData>[].obs;
+  var graphDataList = <DeviceData>[].obs;
+  var selectedPeriod = 'Hari'.obs;
   var dashboardStats = Rx<DashboardStats?>(null);
 
   @override
@@ -21,7 +22,7 @@ class HomeController extends GetxController {
     isLoading.value = true;
     try {
       await Future.wait([
-        fetchTodayData(currentDeviceID: currentDeviceID),
+        fetchGraphData(period: selectedPeriod.value, currentDeviceID: currentDeviceID),
         fetchDashboardStats(currentDeviceID: currentDeviceID),
       ]);
     } catch (e) {
@@ -31,16 +32,39 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> fetchTodayData({int currentDeviceID = 1}) async {
+  void changeGraphPeriod(String period) {
+    selectedPeriod.value = period;
+    fetchGraphData(period: period, currentDeviceID: Get.find<MainController>().currentDevice.value?.id ?? 1);
+  }
+
+  Future<void> fetchGraphData({String period = 'Hari', int currentDeviceID = 1}) async {
     try {
-      // String todayDate = DateTime.now().toIso8601String().split('T')[0];
-      String todayDate = "2025-12-15";
-      final response = await dio.get('${ApiUrl.deviceData}?start_date=${todayDate}&end_date=${todayDate}&device_id=${currentDeviceID}');
-      // Handle the response as needed
+      DateTime now = DateTime(2025,12,15);
+      String endDate = now.toIso8601String().split('T')[0];
+      String startDate = endDate;
+      String frequency = 'hour';
+      int? limit;
+
+      if (period == 'Minggu') {
+        startDate = now.subtract(const Duration(days: 7)).toIso8601String().split('T')[0];
+        frequency = 'day';
+        limit = -1;
+      } else if (period == 'Bulan') {
+        startDate = now.subtract(const Duration(days: 30)).toIso8601String().split('T')[0];
+        frequency = 'day';
+        limit = -1;
+      }
+
+      String url = '${ApiUrl.deviceData}?start_date=$startDate&end_date=$endDate&device_id=$currentDeviceID&frequency=$frequency';
+      if (limit != null) {
+        url += '&limit=$limit';
+      }
+
+      final response = await dio.get(url);
+      
       if (response.statusCode == 200) {
-        //  print(response.data.toString());
         final List<dynamic> data = response.data['data'];
-        todayDataList.value = data.map((item) => DeviceData.fromJson(item)).toList();
+        graphDataList.value = data.map((item) => DeviceData.fromJson(item)).toList();
       }
     } catch (e) {
       print('Error fetching data: $e');
