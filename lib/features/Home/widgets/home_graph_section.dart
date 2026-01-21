@@ -77,38 +77,13 @@ class _HomeGraphSectionState extends State<HomeGraphSection> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Obx(() => Row(
-                      children: [
-                        _buildTabButton("Hari", controller.selectedPeriod.value == 'Hari'),
-                        _buildTabButton("Minggu", controller.selectedPeriod.value == 'Minggu'),
-                        _buildTabButton("Bulan", controller.selectedPeriod.value == 'Bulan'),
-                      ],
-                    )),
-                Obx(() => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: SiwattColors.primarySoft,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.arrow_drop_down, size: 18),
-                      Text(
-                        controller.selectedPeriod.value,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: SiwattColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: Obx(() => Row(
+                  children: [
+                    _buildTabButton("Hari", controller.selectedPeriod.value == 'Hari'),
+                    _buildTabButton("Minggu", controller.selectedPeriod.value == 'Minggu'),
+                    _buildTabButton("Bulan", controller.selectedPeriod.value == 'Bulan'),
+                  ],
                 )),
-              ],
-            ),
           ),
           const SizedBox(height: 24),
           SizedBox(

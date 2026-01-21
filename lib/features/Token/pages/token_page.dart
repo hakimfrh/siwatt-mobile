@@ -132,10 +132,14 @@ class _TokenPageState extends State<TokenPage> {
                   ),
                   const SizedBox(height: 16),
                   AnimatedSize(
-                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    duration: const Duration(milliseconds: 150),
+                    reverseDuration: const Duration(milliseconds: 150),
                     alignment: Alignment.topCenter,
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
+                      switchInCurve: Curves.easeInOut,
+                      switchOutCurve: Curves.easeInOut,
+                      duration: const Duration(milliseconds: 100),
                       transitionBuilder: (Widget child, Animation<double> animation) {
                         return FadeTransition(opacity: animation, child: child);
                       },

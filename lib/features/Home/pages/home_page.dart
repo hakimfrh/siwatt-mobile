@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:siwatt_mobile/core/models/user_model.dart';
 import 'package:siwatt_mobile/features/home/controllers/home_controller.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/features/home/widgets/home_graph_section.dart';
@@ -30,8 +32,8 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            const Text(
-              "Selamat Pagi, Budi !",
+             Text(
+              "Selamat Pagi, ${(Hive.box('userBox').get('user') as User).fullName.split(' ')[0]} !",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
