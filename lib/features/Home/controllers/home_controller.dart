@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:siwatt_mobile/core/models/devices_data.dart';
+import 'package:siwatt_mobile/core/models/user_model.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/features/home/models/dashboardStats.dart';
@@ -11,6 +13,9 @@ class HomeController extends GetxController {
   var graphDataList = <DeviceData>[].obs;
   var selectedPeriod = 'Hari'.obs;
   var dashboardStats = Rx<DashboardStats?>(null);
+
+  User? get user => Hive.box('userBox').get('user') as User?;
+  String get userName => user?.fullName.split(' ')[0] ?? 'User';
 
   @override
   void onInit() {

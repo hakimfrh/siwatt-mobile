@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:siwatt_mobile/core/models/devices.dart';
+import 'package:siwatt_mobile/core/models/user_model.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 
@@ -8,6 +10,8 @@ class MainController extends GetxController {
   var currentIndex = 0.obs;
   var devices = <Device>[].obs;
   var currentDevice = Rx<Device?>(null);
+
+  User? get user => Hive.box('userBox').get('user') as User?;
 
   @override
   void onInit() {
