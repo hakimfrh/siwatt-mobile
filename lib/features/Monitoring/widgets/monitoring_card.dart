@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/features/monitoring/models/monitoring_item.dart';
 
@@ -41,6 +42,13 @@ class MonitoringCard extends StatelessWidget {
   }
 
   Widget _buildExpandedView() {
+    // Calculate dynamic interval to show roughly 5 labels regardless of data size
+    double dynamicInterval = 1.0;
+    if (item.dataPoints.isNotEmpty) {
+      dynamicInterval = (item.dataPoints.length / 5).ceilToDouble();
+      if (dynamicInterval < 1) dynamicInterval = 1.0;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -105,12 +113,21 @@ class MonitoringCard extends StatelessWidget {
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true, // Show X axis ticks
-                    interval: 5, // Skip labels to avoid crowding (show every 5th)
+                    interval: dynamicInterval,
                      getTitlesWidget: (value, meta) {
+                       int index = value.toInt();
+                       String text = '';
+                       if (index >= 0 && index < item.timestamps.length) {
+                         text = DateFormat('mm:ss').format(item.timestamps[index]);
+                       } else if (item.dataPoints.isNotEmpty && index < item.dataPoints.length) {
+                          // Fallback if timestamps are missing for some reason but data exists
+                          text = index.toString(); 
+                       }
+                       
                        return Padding(
                          padding: const EdgeInsets.only(top: 4.0),
                          child: Text(
-                             value.toInt().toString(), // Show datapoint index
+                             text, // Show minute:second
                              style: const TextStyle(fontSize: 10, color: Colors.grey)
                          ),
                        );
@@ -137,6 +154,7 @@ class MonitoringCard extends StatelessWidget {
                       .map((e) => FlSpot(e.key.toDouble(), e.value))
                       .toList(),
                   isCurved: true,
+                  preventCurveOverShooting: true,
                   color: item.color,
                   barWidth: 2,
                   isStrokeCapRound: true,

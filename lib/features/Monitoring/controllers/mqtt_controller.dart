@@ -156,6 +156,7 @@ class MqttController extends GetxController {
         iconData: Icons.bolt,
         iconLetter: 'V',
         dataPoints: [],
+        timestamps: [],
       ),
       MonitoringItem(
         title: "Arus",
@@ -165,6 +166,7 @@ class MqttController extends GetxController {
         iconData: Icons.electric_meter,
         iconLetter: 'A',
         dataPoints: [],
+        timestamps: [],
       ),
       MonitoringItem(
         title: "Daya",
@@ -174,6 +176,7 @@ class MqttController extends GetxController {
         iconData: Icons.power,
         iconLetter: 'W',
         dataPoints: [],
+        timestamps: [],
       ),
       MonitoringItem(
         title: "Faktor Daya",
@@ -183,6 +186,7 @@ class MqttController extends GetxController {
         iconData: Icons.percent,
         iconLetter: 'Pf',
         dataPoints: [],
+        timestamps: [],
       ),
       MonitoringItem(
         title: "Frekuensi",
@@ -192,20 +196,33 @@ class MqttController extends GetxController {
         iconData: Icons.waves,
         iconLetter: 'Hz',
         dataPoints: [],
+        timestamps: [],
       ),
     ];
   }
 
   void _processData(Map<String, dynamic> data) {
-    _updateSingleItem(0, "voltage", data);
-    _updateSingleItem(1, "current", data);
-    _updateSingleItem(2, "power", data);
-    _updateSingleItem(3, "pf", data);
-    _updateSingleItem(4, "frequency", data);
+    DateTime timestamp = DateTime.now();
+    if (data.containsKey('created_at')) {
+      timestamp = DateTime.tryParse(data['created_at'].toString()) ?? DateTime.now();
+    } else if (data.containsKey('timestamp')) {
+       // Handle numeric timestamp or string
+       if (data['timestamp'] is int) {
+         timestamp = DateTime.fromMillisecondsSinceEpoch(data['timestamp'] * 1000);
+       } else {
+         timestamp = DateTime.tryParse(data['timestamp'].toString()) ?? DateTime.now();
+       }
+    }
+
+    _updateSingleItem(0, "voltage", data, timestamp);
+    _updateSingleItem(1, "current", data, timestamp);
+    _updateSingleItem(2, "power", data, timestamp);
+    _updateSingleItem(3, "pf", data, timestamp);
+    _updateSingleItem(4, "frequency", data, timestamp);
     items.refresh();
   }
 
-  void _updateSingleItem(int index, String key, Map<String, dynamic> data) {
+  void _updateSingleItem(int index, String key, Map<String, dynamic> data, DateTime timestamp) {
     if (!data.containsKey(key)) return;
     if (index >= items.length) return;
 
@@ -220,8 +237,11 @@ class MqttController extends GetxController {
     var item = items[index];
     item.value = doubleVal.toStringAsFixed(2);
     item.dataPoints.add(doubleVal);
+    item.timestamps.add(timestamp);
+    
     while (item.dataPoints.length > datapointLimit.value) {
       item.dataPoints.removeAt(0);
+      if (item.timestamps.isNotEmpty) item.timestamps.removeAt(0);
     }
   }
 
@@ -241,6 +261,7 @@ class MqttController extends GetxController {
     for (var item in items) {
       while (item.dataPoints.length > datapointLimit.value) {
         item.dataPoints.removeAt(0);
+        if (item.timestamps.isNotEmpty) item.timestamps.removeAt(0);
       }
     }
     items.refresh();

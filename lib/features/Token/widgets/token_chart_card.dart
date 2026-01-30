@@ -104,15 +104,17 @@ class TokenChartCard extends StatelessWidget {
                 ),
                 minX: 0,
                 maxX: (dataPoints.length - 1).toDouble(),
+                minY: 0,
                 extraLinesData: ExtraLinesData(
                   verticalLines: dataPoints.asMap().entries.where((e) => e.value.topup > 0).map((e) {
-                    return VerticalLine(x: e.key.toDouble(), color: Colors.green, strokeWidth: 2, dashArray: [5, 5]);
+                    return VerticalLine(x: e.key.toDouble(), color: e.value.type == "topup" ? Colors.green : Colors.amber, strokeWidth: 2, dashArray: [5, 5]);
                   }).toList(),
                 ),
                 lineBarsData: [
                   LineChartBarData(
                     spots: dataPoints.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.balance)).toList(),
                     isCurved: true,
+                    preventCurveOverShooting: true,
                     color: SiwattColors.chartPower,
                     barWidth: 2,
                     isStrokeCapRound: true,
@@ -145,10 +147,15 @@ class TokenChartCard extends StatelessWidget {
                               text: 'Usage: ${data.usage.toStringAsFixed(2)} KwH\n',
                               style: textTheme.labelSmall?.copyWith(color: Colors.amber),
                             ),
-                            if (data.topup != 0) ...[
+                            if (data.type == "topup") ...[
                               TextSpan(
                                 text: 'Topup: ${data.topup.toStringAsFixed(2)} KwH\n',
                                 style: textTheme.labelSmall?.copyWith(color: Colors.green),
+                              ),
+                            ], if (data.type == "correction") ...[
+                              TextSpan(
+                                text: 'Change: ${data.usage.toStringAsFixed(2)} KwH\n',
+                                style: textTheme.labelSmall?.copyWith(color: Colors.amber),
                               ),
                             ],
                             TextSpan(

@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:siwatt_mobile/core/models/devices.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
+import 'package:siwatt_mobile/features/profile/controllers/realtime_device_controller.dart';
+import 'package:siwatt_mobile/features/profile/pages/edit_profile.dart';
 import 'package:siwatt_mobile/features/profile/widgets/device_card.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -20,139 +22,160 @@ class _ProfilePageState extends State<ProfilePage> {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-             Stack(
-               alignment: Alignment.center,
-               clipBehavior: Clip.none,
-               children: [
-                 // Green Background Curve
-                 ClipPath(
-                   clipper: _HeaderClipper(),
-                   child: Container(
-                     height: 180,
-                     color: SiwattColors.primary,
-                   ),
-                 ),
-                 
-                 // Profile Image
-                 const Positioned(
-                   bottom: -50,
-                   child: CircleAvatar(
-                     radius: 60,
-                     backgroundColor: Colors.white,
-                     child: CircleAvatar(
-                       radius: 55,
-                       backgroundColor: Colors.grey,
-                      //  backgroundImage: NetworkImage('https://ui-avatars.com/api/?name=Budi+Sulaiman&size=128'), 
-                       // Or Icon as requested
-                       child: Icon(Icons.person, size: 60, color: Colors.white),
-                     ),
-                   ),
-                 ),
-               ],
-             ),
-             const SizedBox(height: 60),
-             
-             // User Info
-             Text(
-               mainController.user?.fullName ?? "-",
-               style: textTheme.headlineLarge?.copyWith(
-                 fontWeight: FontWeight.bold,
-               ),
-             ),
-             Text(
-               mainController.user?.email ?? "-",
-                style: textTheme.bodyMedium
-             ),
-             const SizedBox(height: 12),
-             
-             // Edit Profile Button
-             ElevatedButton(
-               onPressed: () {},
-               style: ElevatedButton.styleFrom(
-                 backgroundColor: SiwattColors.primary,
-                 foregroundColor: Colors.white,
-                 minimumSize: const Size(0, 40),
-                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                 shape: RoundedRectangleBorder(
-                   borderRadius: BorderRadius.circular(8),
-                 ),
-                 textStyle: textTheme.labelLarge?.copyWith(
-                   fontWeight: FontWeight.w500,
-                 ),
-               ),
-               child: const Text("Edit Profile"),
-             ),
-             
-             const SizedBox(height: 16),
-             
-             // Devices Section
-             Padding(
-               padding: const EdgeInsets.symmetric(horizontal: 24),
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // 1. Refresh device list
+          await mainController.refreshDevices();
+
+          // 2. Refresh realtime data for all active device cards
+          final refreshFutures = mainController.devices.map((device) {
+             String tag = 'device_${device.id}';
+             if (Get.isRegistered<RealtimeDeviceController>(tag: tag)) {
+               return Get.find<RealtimeDeviceController>(tag: tag).fetchRealtimeData();
+             }
+             return Future.value();
+          });
+          
+          await Future.wait(refreshFutures);
+        },
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+               Stack(
+                 alignment: Alignment.center,
+                 clipBehavior: Clip.none,
                  children: [
-                   Text(
-                     "Daftar Smart Meter",
-                     style: textTheme.bodyLarge?.copyWith(color: Colors.black, fontWeight: FontWeight.w600),
-                   ),
-                   const SizedBox(height: 8),
-                   
-                   // Tambah Button
-                   InkWell(
-                     onTap: () {},
+                   // Green Background Curve
+                   ClipPath(
+                     clipper: _HeaderClipper(),
                      child: Container(
-                       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                       decoration: BoxDecoration(
-                         color: SiwattColors.primaryDark,
-                         borderRadius: BorderRadius.circular(8),
-                       ),
-                       child: Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                         children: [
-                           Text(
-                             "Tambah",
-                             style: textTheme.bodyMedium?.copyWith(
-                               color: Colors.white,
-                               fontWeight: FontWeight.w600,
-                             ),
-                           ),
-                           Icon(Icons.add, color: Colors.white),
-                         ],
-                       ),
+                       height: 180,
+                       color: SiwattColors.primary,
                      ),
                    ),
                    
-                   const SizedBox(height: 16),
-                   const Divider(),
-                   
-                   // Active Device List
-                   Obx(() {
-                     if (mainController.devices.isEmpty) {
-                       return const Center(child: Padding(
-                         padding: EdgeInsets.all(16.0),
-                         child: Text("Belum ada smart meter"),
-                       ));
-                     }
-                     return ListView.separated(
-                       shrinkWrap: true,
-                       physics: const NeverScrollableScrollPhysics(),
-                       itemCount: mainController.devices.length,
-                       separatorBuilder: (context, index) => const Divider(height: 32),
-                       itemBuilder: (context, index) {
-                         final device = mainController.devices[index];
-                         return DeviceCard(device: device);
-                       },
-                     );
-                   }),
-                   const SizedBox(height: 40),
+                   // Profile Image
+                   const Positioned(
+                     bottom: -50,
+                     child: CircleAvatar(
+                       radius: 60,
+                       backgroundColor: Colors.white,
+                       child: CircleAvatar(
+                         radius: 55,
+                         backgroundColor: Colors.grey,
+                        //  backgroundImage: NetworkImage('https://ui-avatars.com/api/?name=Budi+Sulaiman&size=128'), 
+                         // Or Icon as requested
+                         child: Icon(Icons.person, size: 60, color: Colors.white),
+                       ),
+                     ),
+                   ),
                  ],
                ),
-             ),
-          ],
-        ),  
+               const SizedBox(height: 60),
+               
+               // User Info
+               Text(
+                 mainController.user?.fullName ?? "-",
+                 style: textTheme.headlineLarge?.copyWith(
+                   fontWeight: FontWeight.bold,
+                 ),
+               ),
+               Text(
+                 mainController.user?.email ?? "-",
+                  style: textTheme.bodyMedium
+               ),
+               const SizedBox(height: 12),
+               
+               // Edit Profile Button
+               ElevatedButton(
+                 onPressed: () {
+                    Get.to(() => const EditProfile());
+                 },
+                 style: ElevatedButton.styleFrom(
+                   backgroundColor: SiwattColors.primary,
+                   foregroundColor: Colors.white,
+                   minimumSize: const Size(0, 40),
+                   padding: const EdgeInsets.symmetric(horizontal: 20),
+                   shape: RoundedRectangleBorder(
+                     borderRadius: BorderRadius.circular(8),
+                   ),
+                   textStyle: textTheme.labelLarge?.copyWith(
+                     fontWeight: FontWeight.w500,
+                   ),
+                 ),
+                 child: const Text("Edit Profile"),
+               ),
+               
+               const SizedBox(height: 16),
+               
+               // Devices Section
+               Padding(
+                 padding: const EdgeInsets.symmetric(horizontal: 24),
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Text(
+                       "Daftar Smart Meter",
+                       style: textTheme.bodyLarge?.copyWith(color: Colors.black, fontWeight: FontWeight.w600),
+                     ),
+                     const SizedBox(height: 8),
+                     
+                     // Tambah Button
+                     InkWell(
+                       onTap: () {
+                        Get.toNamed('/add-device');
+                       },
+                       child: Container(
+                         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                         decoration: BoxDecoration(
+                           color: SiwattColors.primaryDark,
+                           borderRadius: BorderRadius.circular(8),
+                         ),
+                         child: Row(
+                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                           children: [
+                             Text(
+                               "Tambah",
+                               style: textTheme.bodyMedium?.copyWith(
+                                 color: Colors.white,
+                                 fontWeight: FontWeight.w600,
+                               ),
+                             ),
+                             Icon(Icons.add, color: Colors.white),
+                           ],
+                         ),
+                       ),
+                     ),
+                     
+                     const SizedBox(height: 16),
+                     const Divider(),
+                     
+                     // Active Device List
+                     Obx(() {
+                       if (mainController.devices.isEmpty) {
+                         return const Center(child: Padding(
+                           padding: EdgeInsets.all(16.0),
+                           child: Text("Belum ada smart meter"),
+                         ));
+                       }
+                       return ListView.separated(
+                         shrinkWrap: true,
+                         physics: const NeverScrollableScrollPhysics(),
+                         itemCount: mainController.devices.length,
+                         separatorBuilder: (context, index) => const Divider(height: 32),
+                         itemBuilder: (context, index) {
+                           final device = mainController.devices[index];
+                           return DeviceCard(device: device);
+                         },
+                       );
+                     }),
+                     const SizedBox(height: 40),
+                   ],
+                 ),
+               ),
+            ],
+          ),
+        ),
       ),
     );
   }

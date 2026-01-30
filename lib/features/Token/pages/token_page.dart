@@ -17,6 +17,7 @@ class TokenPage extends StatefulWidget {
 
 class _TokenPageState extends State<TokenPage> {
   final TransactionController controller = Get.put(TransactionController());
+  final ScrollController _scrollController = ScrollController();
   Timer? _timer;
   bool _showTotalKwh = true;
 
@@ -24,6 +25,15 @@ class _TokenPageState extends State<TokenPage> {
   void initState() {
     super.initState();
     _startTimer();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (!controller.isLoadMoreRunning.value) {
+        controller.fetchTransactions();
+      }
+    }
   }
 
   void _startTimer() {
@@ -39,6 +49,7 @@ class _TokenPageState extends State<TokenPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -338,11 +349,12 @@ class _TokenPageState extends State<TokenPage> {
       backgroundColor: SiwattColors.background,
       body: RefreshIndicator(
         onRefresh: () async {
-          await controller.fetchTransactions();
+          await controller.fetchTransactions(isRefresh: true);
           await controller.fetchGraphData();
           await Get.find<MainController>().getDevices();
         },
         child: SingleChildScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -425,10 +437,16 @@ class _TokenPageState extends State<TokenPage> {
               const SizedBox(height: 16),
               Obx(
                 () => ListView.builder(
-                  itemCount: controller.transactions.length,
+                  itemCount: controller.transactions.length + (controller.isLoadMoreRunning.value ? 1 : 0),
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
+                    if (index == controller.transactions.length) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
                     return TokenHistoryCard(item: controller.transactions[index]);
                   },
                 ),

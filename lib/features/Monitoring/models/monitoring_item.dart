@@ -8,6 +8,7 @@ class MonitoringItem {
   final IconData iconData;
   final String iconLetter;
   final List<double> dataPoints;
+  final List<DateTime> timestamps;
 
   MonitoringItem({
     required this.title,
@@ -17,5 +18,6 @@ class MonitoringItem {
     required this.iconData,
     required this.iconLetter,
     required this.dataPoints,
+    required this.timestamps,
   });
 }
