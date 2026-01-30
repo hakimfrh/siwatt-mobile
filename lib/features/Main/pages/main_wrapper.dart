@@ -42,7 +42,7 @@ class MainWrapper extends StatelessWidget {
                   Spacer(),
                   InkWell(
                     onTap: () {
-                      
+                      Get.toNamed('/add-device');
                     },
                     child: Icon(Icons.add, color: Colors.white,),
                   )

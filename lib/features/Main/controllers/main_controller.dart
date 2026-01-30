@@ -25,6 +25,11 @@ class MainController extends GetxController {
 
   void changeDevice(Device device) {
     currentDevice.value = device;
+    update(); // Notify GetBuilder if any
+  }
+  
+  Future<void> refreshDevices() async {
+     await getDevices();
   }
 
   Future<void> getDevices() async {

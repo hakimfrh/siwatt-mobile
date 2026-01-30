@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
+import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/features/auth/models/login_response_model.dart';
 // Import user model
 
@@ -35,7 +36,7 @@ class LoginController extends GetxController {
           var userBox = Hive.box('userBox');
           await userBox.put('user', loginResponse.data!.user);
 
-          Get.snackbar('Sukses', loginResponse.message, backgroundColor: Colors.green, colorText: Colors.white);
+          Get.snackbar('Sukses', loginResponse.message, backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
           
           // Navigate to Dashboard
           Get.offAllNamed('/main'); 
@@ -46,7 +47,7 @@ class LoginController extends GetxController {
         if (e.response?.statusCode == 400) {
           // Invalid credentials
           final detail = e.response?.data['detail'] ?? 'Login failed';
-          Get.snackbar('Error', detail, backgroundColor: Colors.red, colorText: Colors.white);
+          Get.snackbar('Error', detail, backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
         } else if (e.response?.statusCode == 422) {
           // Validation error
           final errors = e.response?.data['errors'] as Map<String, dynamic>?;
@@ -54,16 +55,16 @@ class LoginController extends GetxController {
           if (errors != null) {
             errorMessage = errors.entries.map((e) => "${e.key}: ${e.value}").join('\n');
           }
-          Get.snackbar('Validation Error', errorMessage, backgroundColor: Colors.orange, colorText: Colors.white);
+          Get.snackbar('Validation Error', errorMessage, backgroundColor: SiwattColors.accentWarning, colorText: Colors.white);
         } else {
-           Get.snackbar('Error', 'Terjadi kesalahan: ${e.response?.statusCode}', backgroundColor: Colors.red, colorText: Colors.white);
+           Get.snackbar('Error', 'Terjadi kesalahan: ${e.response?.statusCode}', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
         }
       } else {
-        Get.snackbar('Error', 'Koneksi gagal', backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('Error', 'Koneksi gagal', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
       }
     } catch (e) {
        print(e);
-       Get.snackbar('Error', 'Terjadi kesalahan tidak terduga', backgroundColor: Colors.red, colorText: Colors.white);
+       Get.snackbar('Error', 'Terjadi kesalahan tidak terduga', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }

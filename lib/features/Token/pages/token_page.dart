@@ -340,6 +340,7 @@ class _TokenPageState extends State<TokenPage> {
         onRefresh: () async {
           await controller.fetchTransactions();
           await controller.fetchGraphData();
+          await Get.find<MainController>().getDevices();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

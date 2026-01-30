@@ -33,6 +33,19 @@ class HistoryController extends GetxController {
     // Default range is today
     startDate.value = DateTime.now();
     endDate.value = DateTime.now();
+    
+    // Listen to device changes
+    final mainController = Get.find<MainController>();
+    ever(mainController.currentDevice, (device) {
+       if (device != null) {
+          fetchData(); // Trigger refetch on device change
+       }
+    });
+
+    // Initial fetch if device exists
+    if (mainController.currentDevice.value != null) {
+       fetchData();
+    }
   }
 
   void setDateRange(DateTime start, DateTime end) {

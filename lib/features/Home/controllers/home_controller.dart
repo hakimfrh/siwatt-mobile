@@ -20,7 +20,19 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    refreshData(currentDeviceID: Get.find<MainController>().currentDevice.value?.id ?? 1);
+    final mainController = Get.find<MainController>();
+    
+    // Initial fetch
+    if (mainController.currentDevice.value != null) {
+      refreshData(currentDeviceID: mainController.currentDevice.value!.id);
+    }
+
+    // Listen to device changes
+    ever(mainController.currentDevice, (device) {
+      if (device != null) {
+        refreshData(currentDeviceID: device.id);
+      }
+    });
   }
 
   Future<void> refreshData({int currentDeviceID = 1}) async {
@@ -44,7 +56,8 @@ class HomeController extends GetxController {
 
   Future<void> fetchGraphData({String period = 'Hari', int currentDeviceID = 1}) async {
     try {
-      DateTime now = DateTime(2025,12,15);
+      // DateTime now = DateTime(2025,12,15);
+      DateTime now = DateTime.now();
       String endDate = now.toIso8601String().split('T')[0];
       String startDate = endDate;
       String frequency = 'hour';

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_themes.dart';
+import 'package:siwatt_mobile/features/add_device/pages/add_device.dart';
 import 'package:siwatt_mobile/features/auth/pages/lupa_password.dart';
 import 'package:siwatt_mobile/features/auth/pages/login.dart';
 import 'package:siwatt_mobile/features/auth/pages/register.dart';
@@ -42,6 +43,7 @@ class MainApp extends StatelessWidget {
         GetPage(name: '/register', page: () => const RegisterPage()),
         GetPage(name: '/lupa-password', page: () => const LupaPassword()),
         GetPage(name: '/main', page: () => const MainWrapper()),
+        GetPage(name: '/add-device', page: () => const AddDevicePage()),
       ],
     );
   }
