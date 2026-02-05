@@ -8,10 +8,10 @@ class TokenTransaction {
   int id;
   int deviceId;
   String type;
-  String amountKwh;
-  String price;
-  String currentBalance;
-  String finalBalance;
+  double amountKwh;
+  double price;
+  double currentBalance;
+  double finalBalance;
   String createdAt;
 
   TokenTransaction({

@@ -24,6 +24,13 @@ class TransactionController extends GetxController{
   @override
   void onInit() {
     super.onInit();
+    
+    // Refresh data when device changes
+    ever(Get.find<MainController>().currentDevice, (_) {
+      fetchTransactions(isRefresh: true);
+      fetchGraphData();
+    });
+
     fetchTransactions(isRefresh: true);
     fetchGraphData();
   }

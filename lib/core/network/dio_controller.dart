@@ -6,7 +6,13 @@ import 'package:siwatt_mobile/core/network/api_url.dart';
 
 class DioClient extends GetxService {
   late Dio dio;
-  final _storage = const FlutterSecureStorage();
+  // Use consistent options
+  final _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
+  );
   bool isRefreshing = false;
 
   Future<DioClient> init() async {

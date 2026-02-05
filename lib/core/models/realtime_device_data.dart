@@ -1,3 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'realtime_device_data.g.dart';
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class RealtimeDeviceData {
   final int deviceId;
   final double voltage;
@@ -5,7 +10,7 @@ class RealtimeDeviceData {
   final double power;
   final double frequency;
   final double pf;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   final double totalToday;
   final bool isOnline;
   final int upTime; // Stored as int seconds
@@ -17,25 +22,13 @@ class RealtimeDeviceData {
     required this.power,
     required this.frequency,
     required this.pf,
-    required this.updatedAt,
+     this.updatedAt,
     required this.totalToday,
     required this.isOnline,
     required this.upTime,
   });
 
-  factory RealtimeDeviceData.fromJson(Map<String, dynamic> json) {
-    return RealtimeDeviceData(
-      deviceId: json['device_id'] as int,
-      voltage: (json['voltage'] as num).toDouble(),
-      current: (json['current'] as num).toDouble(),
-      power: (json['power'] as num).toDouble(),
-      frequency: (json['frequency'] as num).toDouble(),
-      pf: (json['pf'] as num).toDouble(),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      totalToday: (json['total_today'] as num).toDouble(),
-      isOnline: json['is_online'] as bool,
-      // Parse string to int for up_time
-      upTime: int.tryParse(json['up_time'].toString()) ?? 0,
-    );
-  }
+  factory RealtimeDeviceData.fromJson(Map<String, dynamic> json) => _$RealtimeDeviceDataFromJson(json);
+  Map<String, dynamic> toJson() => _$RealtimeDeviceDataToJson(this);
+
 }

@@ -46,7 +46,7 @@ class TokenHistoryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "${double.tryParse(item.finalBalance)?.toStringAsFixed(2)} KwH",
+                    "${item.finalBalance.toStringAsFixed(2)} KwH",
                     style: textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                       color: SiwattColors.chartPower,
@@ -61,11 +61,11 @@ class TokenHistoryCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                "+${double.tryParse(item.amountKwh)?.toStringAsFixed(2)} KwH",
+                "+${item.amountKwh.toStringAsFixed(2)} KwH",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: item.type =='topup'? SiwattColors.accentSuccess : SiwattColors.accentInfo),
               ),
               Text(
-                NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(double.tryParse(item.price) ?? 0),
+                NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(item.price),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: SiwattColors.textPrimary),
               ),
             ],
@@ -75,7 +75,7 @@ class TokenHistoryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "${double.tryParse(item.amountKwh)?.toStringAsFixed(2)} KwH",
+                  "${item.amountKwh.toStringAsFixed(2)} KwH",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: item.type =='topup'? SiwattColors.accentSuccess : SiwattColors.accentInfo),
                 ),
                 Text(

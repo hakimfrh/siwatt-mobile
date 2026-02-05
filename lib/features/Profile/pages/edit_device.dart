@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:siwatt_mobile/core/models/devices.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
+import 'package:siwatt_mobile/core/network/dio_controller.dart';
+import 'package:siwatt_mobile/core/network/api_url.dart';
+import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
 
 class EditDevicePage extends StatefulWidget {
   final Device device;
@@ -39,19 +42,44 @@ class _EditDevicePageState extends State<EditDevicePage> {
       textCancel: "Cancel",
       confirmTextColor: Colors.white,
       buttonColor: SiwattColors.accentDanger,
-      onConfirm: () {
-        // TODO: Call API to delete device
-        Get.back(); // Close dialog
-        Get.back(); // Go back to profile
-        Get.snackbar("Success", "Device removed (UI Demo)", backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
+      onConfirm: () async {
+        try {
+          final dio = Get.find<DioClient>().dio;
+          final response = await dio.delete('${ApiUrl.devices}/${widget.device.id}');
+
+          if (response.statusCode == 200) {
+            await Get.find<MainController>().refreshDevices();
+            Get.back(); // Close dialog
+            Get.back(); // Go back to profile
+            Get.snackbar("Success", "Device deleted", backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
+          }
+        } catch (e) {
+          Get.back(); // Close dialog
+          Get.snackbar("Error", "Failed to delete device", backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
+        }
       }
     );
   }
 
-  void _handleSave() {
-     // TODO: Call API to update device
-     Get.back();
-     Get.snackbar("Success", "Device updated (UI Demo)", backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
+  void _handleSave() async {
+     try {
+       final dio = Get.find<DioClient>().dio;
+       final response = await dio.put(
+         '${ApiUrl.devices}/${widget.device.id}',
+         data: {
+           "device_name": _nameController.text,
+           "location": _locationController.text,
+         }
+       );
+
+       if (response.statusCode == 200) {
+         await Get.find<MainController>().refreshDevices();
+         Get.back();
+         Get.snackbar("Success", "Device updated successfully", backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
+       }
+     } catch (e) {
+       Get.snackbar("Error", "Failed to update device", backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
+     }
   }
 
   @override

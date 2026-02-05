@@ -11,7 +11,12 @@ import 'package:siwatt_mobile/features/auth/models/login_response_model.dart';
 
 class LoginController extends GetxController {
   final dio = Get.find<DioClient>().dio;
-  final _storage = const FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
+  );
   
   var isLoading = false.obs;
 

@@ -260,10 +260,19 @@ class AddDeviceController extends GetxController {
 
         // Refresh MainController to show new device
         if (Get.isRegistered<MainController>()) {
-          Get.find<MainController>().refreshDevices();
-        }
+          final mainController = Get.find<MainController>();
+          await mainController.refreshDevices();
 
-        Get.back(); // Go back to main list
+          // Set the newly added device as current
+          for (var device in mainController.devices) {
+            print("Checking device: ${device.deviceCode} against ${deviceId.value}");
+             if (device.deviceCode == deviceId.value) {
+               mainController.changeDevice(device);
+               break;
+             }
+          }
+        }
+        Get.offAllNamed('/main');
       } else {
         Get.snackbar("Error", "Device returned status: ${response.statusCode}", backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
       }
@@ -284,6 +293,8 @@ class AddDeviceController extends GetxController {
           backgroundColor: SiwattColors.accentWarning,
           colorText: Colors.white,
         );
+        return;
+      }else {
         Dio mainDio;
         if (!Get.isRegistered<DioClient>()) {
           // Retry fetching or init

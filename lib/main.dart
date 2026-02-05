@@ -20,8 +20,24 @@ void main() async {
   await Hive.openBox('userBox');
 
   // Check login status
-  const storage = FlutterSecureStorage();
-  String? token = await storage.read(key: 'token');
+  // Use encryptedSharedPreferences: true for better stability on Android and resetOnError to handle keystore issues
+  const storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
+  );
+  
+  String? token;
+  try {
+    token = await storage.read(key: 'token');
+  } catch (e) {
+    debugPrint("Storage error: $e");
+    // If we can't read the token, we assume logged out. 
+    // resetOnError: true in options should handle wiping, but we can be safe.
+    await storage.deleteAll();
+  }
+  
   String initialRoute = token != null ? '/main' : '/login';
 
   await Get.putAsync(() => DioClient().init());

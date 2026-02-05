@@ -11,10 +11,10 @@ TokenTransaction _$TokenTransactionFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       deviceId: (json['device_id'] as num).toInt(),
       type: json['type'] as String,
-      amountKwh: json['amount_kwh'] as String,
-      price: json['price'] as String,
-      currentBalance: json['current_balance'] as String,
-      finalBalance: json['final_balance'] as String,
+      amountKwh: (json['amount_kwh'] as num).toDouble(),
+      price: (json['price'] as num).toDouble(),
+      currentBalance: (json['current_balance'] as num).toDouble(),
+      finalBalance: (json['final_balance'] as num).toDouble(),
       createdAt: json['created_at'] as String,
     );
 
