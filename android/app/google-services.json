@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "461745044118",
+    "project_id": "siwatt-skripsi",
+    "storage_bucket": "siwatt-skripsi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461745044118:android:fe59aeca251365b0cb60b7",
+        "android_client_info": {
+          "package_name": "com.hdev.siwatt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUkqnE3YsM_W9M6mAfLXcCzBjvXY7aol0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

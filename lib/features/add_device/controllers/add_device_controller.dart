@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:siwatt_mobile/core/models/devices.dart'; // Import Device model
 import 'package:siwatt_mobile/core/models/user_model.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+
+enum AddDeviceMode { add, reconfigure }
 
 class AddDeviceController extends GetxController {
   final Dio _dio = Dio(); // For ESP connection
@@ -22,6 +25,9 @@ class AddDeviceController extends GetxController {
   var availableDevices = <WifiNetwork>[].obs;
   var selectedDeviceSSID = ''.obs;
   var deviceId = ''.obs;
+  
+  var mode = AddDeviceMode.add.obs;
+  Device? existingDevice;
 
   // ESP8266 Access Point IP
   final String espBaseUrl = 'http://192.168.4.1';
@@ -40,6 +46,19 @@ class AddDeviceController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    
+    // Check for arguments passed via Get.toNamed or Get.to
+    if (Get.arguments != null && Get.arguments is Map) {
+      if (Get.arguments['mode'] == AddDeviceMode.reconfigure) {
+        mode.value = AddDeviceMode.reconfigure;
+        existingDevice = Get.arguments['device'];
+        if (existingDevice != null) {
+          deviceNameController.text = existingDevice!.deviceName;
+          deviceLocationController.text = existingDevice!.location;
+        }
+      }
+    }
+    
     // Start scanning immediately when entering the page
     scanForItems();
   }
@@ -71,10 +90,18 @@ class AddDeviceController extends GetxController {
         // Filter for SiWatt devices
         final siwattDevices = list.where((network) => (network.ssid != null && network.ssid!.startsWith('SiWatt'))).toList();
 
-        // Sort by Signal Strength (Level), descending
-        siwattDevices.sort((a, b) => (b.level ?? -100).compareTo(a.level ?? -100));
+        // If reconfiguring, filter only devices matching the device code (assuming SSID contains it)
+        List<WifiNetwork> filteredDevices = siwattDevices;
+        if (mode.value == AddDeviceMode.reconfigure && existingDevice != null) {
+           // We assume SSID format like "SiWatt-<DeviceCode>" or similar.
+           // If we don't know exact format, we can try to match containment.
+           filteredDevices = siwattDevices.where((network) => network.ssid!.contains(existingDevice!.deviceCode)).toList();
+        }
 
-        availableDevices.assignAll(siwattDevices);
+        // Sort by Signal Strength (Level), descending
+        filteredDevices.sort((a, b) => (b.level ?? -100).compareTo(a.level ?? -100));
+
+        availableDevices.assignAll(filteredDevices);
 
         if (availableDevices.isEmpty) {
           // For testing purposes if no device is around, un-comment below
@@ -249,6 +276,14 @@ class AddDeviceController extends GetxController {
           await WiFiForIoTPlugin.forceWifiUsage(false);
         }
         await WiFiForIoTPlugin.disconnect();
+
+        // If in Reconfigure mode, we stop here and go back.
+        if (mode.value == AddDeviceMode.reconfigure) {
+           Get.back(); // Close AddDevicePage
+           Get.back(); // Close EditDevicePage or return to it
+           Get.snackbar("Success", "Device Reconfigured Successfully", backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
+           return;
+        }
 
         // Wait and Register to Backend
         Get.showSnackbar(const GetSnackBar(message: "Registering device to server...", showProgressIndicator: true, duration: Duration(seconds: 2)));

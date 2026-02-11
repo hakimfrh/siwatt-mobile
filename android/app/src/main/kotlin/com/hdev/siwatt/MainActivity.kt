@@ -1,4 +1,4 @@
-package com.example.siwatt_mobile
+package com.hdev.siwatt
 
 import io.flutter.embedding.android.FlutterActivity
 

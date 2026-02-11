@@ -20,15 +20,19 @@ class AddDevicePage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, color: colorScheme.onSurface),
-          onPressed: () => Get.back(),
+          onPressed: () {
+            // Ensure we clear the controller when going back
+            Get.delete<AddDeviceController>();
+            Get.back();
+          },
         ),
-        title: Text(
-          'Add New Device',
+        title: Obx(() => Text(
+          controller.mode.value == AddDeviceMode.reconfigure ? 'Reconfigure Device' : 'Add New Device',
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             color: colorScheme.onSurface,
           ),
-        ),
+        )),
       ),
       body: Obx(() {
         return AnimatedSwitcher(
@@ -102,7 +106,10 @@ class AddDevicePage extends StatelessWidget {
                               children: [
                                 Icon(Icons.wifi_off, size: 48, color: Colors.grey[400]),
                                 const SizedBox(height: 16),
-                                Text("No new devices found", style: textTheme.bodyLarge),
+                                Text(controller.mode.value == AddDeviceMode.reconfigure 
+                                    ? "Device '${controller.existingDevice?.deviceCode ?? ''}' not found" 
+                                    : "No new devices found",
+                                  style: textTheme.bodyLarge),
                                 TextButton(
                                   onPressed: controller.scanForItems,
                                   child: const Text("Scan Again"),
@@ -266,24 +273,26 @@ class AddDevicePage extends StatelessWidget {
                validator: (v) => v?.isNotEmpty == true ? null : "Required",
             ),
             
-             const SizedBox(height: 30),
-             Text("Device Details", style: textTheme.labelLarge),
-             const SizedBox(height: 16),
-             _buildTextField(
-              controller: controller.deviceNameController,
-              label: "Device Name (e.g. Living Room AC)",
-              icon: Icons.edit_outlined,
-              colorScheme: colorScheme,
-               validator: (v) => v?.isNotEmpty == true ? null : "Required",
-            ),
-            const SizedBox(height: 16),
-             _buildTextField(
-              controller: controller.deviceLocationController,
-              label: "Location (e.g. Ground Floor)",
-              icon: Icons.place_outlined,
-              colorScheme: colorScheme,
-               validator: (v) => v?.isNotEmpty == true ? null : "Required",
-            ),
+             if (controller.mode.value == AddDeviceMode.add) ...[
+                const SizedBox(height: 30),
+                Text("Device Details", style: textTheme.labelLarge),
+                const SizedBox(height: 16),
+                _buildTextField(
+                 controller: controller.deviceNameController,
+                 label: "Device Name (e.g. Living Room AC)",
+                 icon: Icons.edit_outlined,
+                 colorScheme: colorScheme,
+                  validator: (v) => v?.isNotEmpty == true ? null : "Required",
+               ),
+               const SizedBox(height: 16),
+                _buildTextField(
+                 controller: controller.deviceLocationController,
+                 label: "Location (e.g. Ground Floor)",
+                 icon: Icons.place_outlined,
+                 colorScheme: colorScheme,
+                  validator: (v) => v?.isNotEmpty == true ? null : "Required",
+               ),
+             ],
 
             const SizedBox(height: 40),
             SizedBox(
@@ -302,7 +311,10 @@ class AddDevicePage extends StatelessWidget {
                 ),
                 child: Obx(() => controller.isLoading.value
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Save & Activate", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+                    : Text(
+                        controller.mode.value == AddDeviceMode.reconfigure ? "Reconfigure" : "Save & Activate",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      )),
               ),
             ),
              const SizedBox(height: 16),

@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:siwatt_mobile/core/models/user_model.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
@@ -11,40 +13,29 @@ import 'package:siwatt_mobile/features/auth/models/login_response_model.dart';
 
 class LoginController extends GetxController {
   final dio = Get.find<DioClient>().dio;
-  final _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-      resetOnError: true,
-    ),
-  );
-  
+  final _storage = const FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true, resetOnError: true));
+
   var isLoading = false.obs;
 
   Future<void> login(String email, String password) async {
     isLoading.value = true;
     try {
-      final response = await dio.post(
-        ApiUrl.login, 
-        data: {
-          'email': email,
-          'password': password,
-        },
-      );
+      final response = await dio.post(ApiUrl.login, data: {'email': email, 'password': password});
 
       if (response.statusCode == 200) {
         final loginResponse = LoginResponse.fromJson(response.data);
         if (loginResponse.data != null) {
           // Simpan token ke SecureStorage
           await _storage.write(key: 'token', value: loginResponse.data!.apiToken);
-          
+
           // Simpan user ke Hive
           var userBox = Hive.box('userBox');
           await userBox.put('user', loginResponse.data!.user);
+          await FirebaseMessaging.instance.subscribeToTopic("user_${loginResponse.data!.user.id}");
 
           Get.snackbar('Sukses', loginResponse.message, backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
-          
           // Navigate to Dashboard
-          Get.offAllNamed('/main'); 
+          Get.offAllNamed('/main');
         }
       }
     } on DioException catch (e) {
@@ -62,14 +53,14 @@ class LoginController extends GetxController {
           }
           Get.snackbar('Validation Error', errorMessage, backgroundColor: SiwattColors.accentWarning, colorText: Colors.white);
         } else {
-           Get.snackbar('Error', 'Terjadi kesalahan: ${e.response?.statusCode}', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
+          Get.snackbar('Error', 'Terjadi kesalahan: ${e.response?.statusCode}', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
         }
       } else {
         Get.snackbar('Error', 'Koneksi gagal', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
       }
     } catch (e) {
-       print(e);
-       Get.snackbar('Error', 'Terjadi kesalahan tidak terduga', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
+      print(e);
+      Get.snackbar('Error', 'Terjadi kesalahan tidak terduga', backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -78,11 +69,13 @@ class LoginController extends GetxController {
   Future<void> logout() async {
     // Hapus token dari SecureStorage
     await _storage.delete(key: 'token');
-    
+
     // Hapus user dari Hive
     var userBox = Hive.box('userBox');
+    User user = userBox.get('user');
+    await FirebaseMessaging.instance.unsubscribeFromTopic("user_${user.id}");
     await userBox.clear();
-    
+  
     Get.offAllNamed('/login');
   }
 }
