@@ -130,8 +130,8 @@ class TransactionController extends GetxController{
         currentPage = response.data['current_page'] ?? 1;
 
         // Handle the response as needed
-        totalCost.value = double.tryParse(response.data['total_price'].toString()) ?? 0.0;
-        totalKwh.value = double.tryParse(response.data['total_token_bought'].toString()) ?? 0.0;
+        totalCost.value = double.tryParse(response.data['total_price_30days'].toString()) ?? 0.0;
+        totalKwh.value = double.tryParse(response.data['total_token_bought_30days'].toString()) ?? 0.0;
 
         List<dynamic> data = response.data['data'];
         final newItems = data.map((item) => TokenTransaction.fromJson(item)).toList();

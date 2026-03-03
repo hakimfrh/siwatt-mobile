@@ -109,20 +109,20 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 8),
                   Row(
                     children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (value) {
-                          setState(() {
-                            _rememberMe = value ?? false;
-                          });
-                        },
-                        activeColor: Colors.white,
-                        checkColor: colorScheme.primary,
-                        side: BorderSide(color: Colors.white, width: 2),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      Text('Ingat Saya', style: TextStyle(color: Colors.white)),
+                      // Checkbox(
+                      //   value: _rememberMe,
+                      //   onChanged: (value) {
+                      //     setState(() {
+                      //       _rememberMe = value ?? false;
+                      //     });
+                      //   },
+                      //   activeColor: Colors.white,
+                      //   checkColor: colorScheme.primary,
+                      //   side: BorderSide(color: Colors.white, width: 2),
+                      //   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      //   visualDensity: VisualDensity.compact,
+                      // ),
+                      // Text('Ingat Saya', style: TextStyle(color: Colors.white)),
                       Spacer(),
                       InkWell(
                         onTap: () {

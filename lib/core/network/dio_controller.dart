@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
+import 'package:siwatt_mobile/features/auth/controllers/login_controller.dart';
 
 class DioClient extends GetxService {
   late Dio dio;
@@ -145,9 +146,29 @@ class DioClient extends GetxService {
   }
 
   void _handleSessionExpired() async {
-     await _storage.delete(key: 'token');
-     var userBox = Hive.box('userBox');
-     await userBox.clear();
-     Get.offAllNamed('/login');
+    await _storage.delete(key: 'token');
+    var userBox = Hive.box('userBox');
+    await userBox.clear();
+
+    // Coba auto-login dengan kredensial yang tersimpan
+    final email = await _storage.read(key: 'email');
+    final password = await _storage.read(key: 'password');
+
+    if (email != null && password != null) {
+      try {
+        final loginController = Get.isRegistered<LoginController>()
+            ? Get.find<LoginController>()
+            : Get.put(LoginController());
+        await loginController.login(email, password);
+        // Jika login berhasil, LoginController akan navigasi ke /main
+        return;
+      } catch (_) {
+        // Auto-login gagal, hapus kredensial
+      }
+      await _storage.delete(key: 'email');
+      await _storage.delete(key: 'password');
+    }
+
+    Get.offAllNamed('/login');
   }
 }

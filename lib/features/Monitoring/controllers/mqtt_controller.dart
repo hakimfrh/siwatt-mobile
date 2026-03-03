@@ -104,7 +104,7 @@ class MqttController extends GetxController {
       // Reset previous values
       _initializeItems();
       
-      String topic = '/${currentUser.username}/swm-raw/${device.deviceCode}';
+      String topic = '/siwatt-mqtt/${currentUser.username}/swm-raw/${device.deviceCode}';
       _subscribe(topic);
     } else {
       client!.disconnect();

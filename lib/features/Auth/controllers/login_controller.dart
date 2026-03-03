@@ -28,6 +28,10 @@ class LoginController extends GetxController {
           // Simpan token ke SecureStorage
           await _storage.write(key: 'token', value: loginResponse.data!.apiToken);
 
+          //optional
+          await _storage.write(key: 'email', value: email);
+          await _storage.write(key: 'password', value: password);
+
           // Simpan user ke Hive
           var userBox = Hive.box('userBox');
           await userBox.put('user', loginResponse.data!.user);
@@ -69,13 +73,15 @@ class LoginController extends GetxController {
   Future<void> logout() async {
     // Hapus token dari SecureStorage
     await _storage.delete(key: 'token');
+    await _storage.delete(key: 'email');
+    await _storage.delete(key: 'password');
 
     // Hapus user dari Hive
     var userBox = Hive.box('userBox');
     User user = userBox.get('user');
     await FirebaseMessaging.instance.unsubscribeFromTopic("user_${user.id}");
     await userBox.clear();
-  
+
     Get.offAllNamed('/login');
   }
 }
