@@ -21,26 +21,26 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     final mainController = Get.find<MainController>();
-    
-    // Initial fetch
-    if (mainController.currentDevice.value != null) {
-      refreshData(currentDeviceID: mainController.currentDevice.value!.id);
-    }
 
-    // Listen to device changes
-    ever(mainController.currentDevice, (device) {
-      if (device != null) {
-        refreshData(currentDeviceID: device.id);
+    // Trigger refresh when device list first loads (initial app launch race condition)
+    ever(mainController.devices, (_) {
+      if (mainController.currentDevice != null) {
+        refreshData();
       }
+    });
+
+    // Trigger refresh when user switches device
+    ever(mainController.currentDeviceIndex, (_) {
+      refreshData();
     });
   }
 
-  Future<void> refreshData({int currentDeviceID = 1}) async {
+  Future<void> refreshData() async {
     isLoading.value = true;
     try {
       await Future.wait([
-        fetchGraphData(period: selectedPeriod.value, currentDeviceID: currentDeviceID),
-        fetchDashboardStats(currentDeviceID: currentDeviceID),
+        fetchGraphData(period: selectedPeriod.value),
+        fetchDashboardStats(),
       ]);
     } catch (e) {
       print('Error refreshing data: $e');
@@ -51,12 +51,13 @@ class HomeController extends GetxController {
 
   void changeGraphPeriod(String period) {
     selectedPeriod.value = period;
-    fetchGraphData(period: period, currentDeviceID: Get.find<MainController>().currentDevice.value?.id ?? 1);
+    fetchGraphData(period: period);
   }
 
-  Future<void> fetchGraphData({String period = 'Hari', int currentDeviceID = 1}) async {
+  Future<void> fetchGraphData({String period = 'Hari'}) async {
+    final currentDeviceID = Get.find<MainController>().currentDevice?.id;
+    if (currentDeviceID == null) return;
     try {
-      // DateTime now = DateTime(2025,12,15);
       DateTime now = DateTime.now();
       String endDate = now.toIso8601String().split('T')[0];
       String startDate = endDate;
@@ -79,7 +80,7 @@ class HomeController extends GetxController {
       }
 
       final response = await dio.get(url);
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'];
         graphDataList.value = data.map((item) => DeviceData.fromJson(item)).toList();
@@ -89,7 +90,9 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> fetchDashboardStats({int currentDeviceID = 1}) async {
+  Future<void> fetchDashboardStats() async {
+    final currentDeviceID = Get.find<MainController>().currentDevice?.id;
+    if (currentDeviceID == null) return;
     try {
       final response = await dio.get('${ApiUrl.dashboardData}?device_id=$currentDeviceID');
       if (response.statusCode == 200) {

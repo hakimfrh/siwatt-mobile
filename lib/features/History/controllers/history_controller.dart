@@ -36,14 +36,14 @@ class HistoryController extends GetxController {
     
     // Listen to device changes
     final mainController = Get.find<MainController>();
-    ever(mainController.currentDevice, (device) {
-       if (device != null) {
+    ever(mainController.currentDeviceIndex, (_) {
+       if (mainController.currentDevice != null) {
           fetchData(); // Trigger refetch on device change
        }
     });
 
     // Initial fetch if device exists
-    if (mainController.currentDevice.value != null) {
+    if (mainController.currentDevice != null) {
        fetchData();
     }
   }
@@ -108,7 +108,7 @@ class HistoryController extends GetxController {
       _cancelToken = CancelToken();
       
       try {
-        final currentDeviceID = Get.find<MainController>().currentDevice.value?.id ?? 1;
+        final currentDeviceID = Get.find<MainController>().currentDevice?.id ?? 1;
         final startStr = startDate.value!.toIso8601String().split('T')[0];
         final endStr = endDate.value!.toIso8601String().split('T')[0];
         

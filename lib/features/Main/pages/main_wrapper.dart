@@ -60,7 +60,7 @@ class MainWrapper extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final device = controller.devices[index];
                         return Obx(() {
-                          final isSelected = controller.currentDevice.value?.id == device.id;
+                          final isSelected = controller.currentDevice?.id == device.id;
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12.0),
                             child: ListTile(

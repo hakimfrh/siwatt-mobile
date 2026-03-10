@@ -13,6 +13,7 @@ class TransactionController extends GetxController{
   var isLoading = false.obs;
   var transactions = <TokenTransaction>[].obs;
   var graphData = <TokenGraphData>[].obs;
+  var tokenBalance = 0.0.obs;
   var totalKwh = 0.0.obs;
   var totalCost = 0.0.obs;
 
@@ -26,7 +27,7 @@ class TransactionController extends GetxController{
     super.onInit();
     
     // Refresh data when device changes
-    ever(Get.find<MainController>().currentDevice, (_) {
+    ever(Get.find<MainController>().currentDeviceIndex, (_) {
       fetchTransactions(isRefresh: true);
       fetchGraphData();
     });
@@ -37,7 +38,7 @@ class TransactionController extends GetxController{
 
   Future<bool> addTransaction(String amountKwh, String price) async {
     try {
-      final deviceId = Get.find<MainController>().currentDevice.value?.id;
+      final deviceId = Get.find<MainController>().currentDevice?.id;
       if (deviceId == null) {
         Get.snackbar("Error", "No device selected", backgroundColor: Colors.red, colorText: Colors.white);
         return false;
@@ -64,7 +65,7 @@ class TransactionController extends GetxController{
   }
   Future<void> fetchGraphData() async {
     try {
-      final deviceId = Get.find<MainController>().currentDevice.value?.id ?? 1;
+      final deviceId = Get.find<MainController>().currentDevice?.id ?? 1;
       
       // Calculate date 15 days ago
       final startDate = DateTime.now().subtract(const Duration(days: 15));
@@ -73,6 +74,7 @@ class TransactionController extends GetxController{
       final response = await dio.get("${ApiUrl.transactions}/$deviceId/data?start_date=$formattedDate");
       
       if (response.statusCode == 200) {
+        tokenBalance.value = double.tryParse(response.data['token_balance'].toString()) ?? 0.0;
         List<dynamic> data = response.data['data'];
         graphData.assignAll(data.map((item) => TokenGraphData.fromJson(item)).toList());
       }
@@ -83,7 +85,7 @@ class TransactionController extends GetxController{
 
   Future<bool> correctBalance(String finalBalance) async {
     try {
-      final deviceId = Get.find<MainController>().currentDevice.value?.id;
+      final deviceId = Get.find<MainController>().currentDevice?.id;
       if (deviceId == null) {
         Get.snackbar("Error", "No device selected", backgroundColor: Colors.red, colorText: Colors.white);
         return false;
@@ -119,7 +121,7 @@ class TransactionController extends GetxController{
     }
 
     try {
-      final deviceId = Get.find<MainController>().currentDevice.value?.id ?? 1;
+      final deviceId = Get.find<MainController>().currentDevice?.id ?? 1;
       int pageToFetch = isRefresh ? 1 : currentPage + 1;
 
       final response = await dio.get("${ApiUrl.transactions}/$deviceId?page=$pageToFetch");

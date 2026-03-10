@@ -60,7 +60,7 @@ class _TokenPageState extends State<TokenPage> {
     final textTheme = Theme.of(context).textTheme;
 
     bool isTopUp = true;
-    double currentKwh = Get.find<MainController>().currentDevice.value?.tokenBalance ?? 0.0;
+    double currentKwh = Get.find<MainController>().currentDevice?.tokenBalance ?? 0.0;
     double? difference;
 
     showModalBottomSheet(
@@ -367,7 +367,7 @@ class _TokenPageState extends State<TokenPage> {
               const SizedBox(height: 20),
               Obx(
                 () => TokenChartCard(
-                  value: (Get.find<MainController>().currentDevice.value?.tokenBalance ?? 0.00).toStringAsFixed(2),
+                  value: controller.tokenBalance.value.toStringAsFixed(2),
                   unit: "KwH",
                   dataPoints: controller.graphData.toList(),
                 ),

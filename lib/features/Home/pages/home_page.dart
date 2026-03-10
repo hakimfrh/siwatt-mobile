@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:siwatt_mobile/features/home/controllers/home_controller.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/features/home/widgets/home_graph_section.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,6 +16,19 @@ class _HomePageState extends State<HomePage> {
   final HomeController controller = Get.put(HomeController());
   final String _selectedPeriod = 'Hari Ini';
   final String _selectedMetric = 'Energi';
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      return 'Selamat Pagi';
+    } else if (hour >= 12 && hour < 15) {
+      return 'Selamat Siang';
+    } else if (hour >= 15 && hour < 18) {
+      return 'Selamat Sore';
+    } else {
+      return 'Selamat Malam';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +45,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
              Text(
-              "Selamat Pagi, ${controller.userName} !",
+              "${_getGreeting()}, ${controller.userName} !",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

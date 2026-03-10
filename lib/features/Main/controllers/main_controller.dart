@@ -9,7 +9,12 @@ class MainController extends GetxController {
   final dio = Get.find<DioClient>().dio;
   var currentIndex = 0.obs;
   var devices = <Device>[].obs;
-  var currentDevice = Rx<Device?>(null);
+  var currentDeviceIndex = 0.obs;
+
+  Device? get currentDevice =>
+      devices.isNotEmpty && currentDeviceIndex.value >= 0 && currentDeviceIndex.value < devices.length
+          ? devices[currentDeviceIndex.value]
+          : null;
 
   User? get user => Hive.box('userBox').get('user') as User?;
 
@@ -31,7 +36,10 @@ class MainController extends GetxController {
   }
 
   void changeDevice(Device device) {
-    currentDevice.value = device;
+    final index = devices.indexOf(device);
+    if (index >= 0) {
+      currentDeviceIndex.value = index;
+    }
     update(); // Notify GetBuilder if any
   }
 
@@ -50,8 +58,8 @@ class MainController extends GetxController {
         final deviceList = data.map((item) => Device.fromJson(item)).toList();
         devices.assignAll(deviceList);
 
-        if (devices.isNotEmpty && currentDevice.value == null) {
-          currentDevice.value = devices.first;
+        if (devices.isNotEmpty && currentDeviceIndex.value >= devices.length) {
+          currentDeviceIndex.value = 0;
         }
 
         if (pendingDeviceId != null) {

@@ -26,7 +26,7 @@ class MqttController extends GetxController {
     _initializeItems();
     
     // Auto-reconnect on device switch
-    ever(mainController.currentDevice, (device) {
+    ever(mainController.currentDeviceIndex, (_) {
       if (isConnected.value) {
         disconnect();
         connect();
@@ -50,7 +50,7 @@ class MqttController extends GetxController {
 
     final userBox = Hive.box('userBox');
     User? currentUser = userBox.get('user');
-    final device = mainController.currentDevice.value;
+    final device = mainController.currentDevice;
 
     if (currentUser == null || device == null) return;
 
