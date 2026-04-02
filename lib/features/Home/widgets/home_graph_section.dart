@@ -115,15 +115,39 @@ class _HomeGraphSectionState extends State<HomeGraphSection> {
               }
 
               if (spots.isEmpty) {
-                 return const Center(child: Text("No data available"));
+                return const Center(child: Text("No data available"));
               }
 
-              double minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
-              double maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+              // ── Prediction spots (hanya saat mode Hari & metrik Energi) ──
+              List<FlSpot> predSpots = [];
+              if (period == 'Hari' && _selectedMetric == 'Energi') {
+                final predictions = controller.predictionPoints;
+                // Buat map hour → energyHour dari prediction agar penempatan
+                // jam tidak salah (API bisa mengembalikan order & jam mana saja)
+                final predMap = <int, double>{};
+                for (final p in predictions) {
+                  // Normalisasi ke local time; pastikan hanya jam 0-23
+                  final localDt = p.datetime.toLocal();
+                  predMap[localDt.hour] = p.energyHour;
+                }
+                // Konversi ke FlSpot dengan x = jam (sama dengan data aktual)
+                predSpots = predMap.entries
+                    .map((e) => FlSpot(e.key.toDouble(), e.value))
+                    .toList()
+                  ..sort((a, b) => a.x.compareTo(b.x));
+              }
 
-              // Add some padding to Y axis
+              // ── Y-axis range (gabungan data aktual + prediksi) ──
+              List<double> allYValues = spots.map((e) => e.y).toList();
+              if (predSpots.isNotEmpty) {
+                allYValues.addAll(predSpots.map((e) => e.y));
+              }
+
+              double minY = allYValues.reduce((a, b) => a < b ? a : b);
+              double maxY = allYValues.reduce((a, b) => a > b ? a : b);
+
               double yRange = maxY - minY;
-              if (yRange == 0) yRange = 1; // avoid division by zero
+              if (yRange == 0) yRange = 1;
               if (minY > 0) {
                 minY = (minY - yRange * 0.1).clamp(0, double.infinity);
               }
@@ -139,14 +163,50 @@ class _HomeGraphSectionState extends State<HomeGraphSection> {
                 minX = 0;
                 maxX = (spots.length - 1).toDouble();
                 if (maxX < 1) maxX = 1;
-                
+
                 if (period == 'Minggu') {
-                  interval = 1; // Force interval 1 for weekly view to align days
+                  interval = 1;
                 } else {
                   interval = maxX / 5;
                   if (interval < 1) interval = 1;
                 }
               }
+
+              // ── Build line bars ──
+              final List<LineChartBarData> lineBarsData = [
+                // Garis utama (data aktual)
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: SiwattColors.primary,
+                  barWidth: 2,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        SiwattColors.primary.withOpacity(0.5),
+                        SiwattColors.primary.withOpacity(0.1),
+                      ],
+                    ),
+                  ),
+                ),
+                // Garis prediksi — putus-putus abu-abu (hanya jika ada data)
+                if (predSpots.isNotEmpty)
+                  LineChartBarData(
+                    spots: predSpots,
+                    isCurved: true,
+                    color: Colors.grey.shade400,
+                    barWidth: 2,
+                    isStrokeCapRound: true,
+                    dashArray: [6, 4],
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(show: false),
+                  ),
+              ];
 
               return Padding(
                 padding: const EdgeInsets.fromLTRB(0, 0, 24, 0),
@@ -178,44 +238,44 @@ class _HomeGraphSectionState extends State<HomeGraphSection> {
                           interval: interval,
                           getTitlesWidget: (value, meta) {
                             if (period == 'Hari') {
-                                int hour = value.toInt();
-                                if (hour >= 0 && hour <= 23) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 5.0),
-                                    child: Text(
-                                      '${hour.toString().padLeft(2, '0')}:00',
-                                      style: const TextStyle(
-                                        color: Color(0xff68737d),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
+                              int hour = value.toInt();
+                              if (hour >= 0 && hour <= 23) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 5.0),
+                                  child: Text(
+                                    '${hour.toString().padLeft(2, '0')}:00',
+                                    style: const TextStyle(
+                                      color: Color(0xff68737d),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
                                     ),
-                                  );
-                                }
+                                  ),
+                                );
+                              }
                             } else {
-                                int index = value.toInt();
-                                if (index >= 0 && index < data.length) {
-                                  final date = data[index].datetime;
-                                  String text;
-                                  if (period == 'Minggu') {
-                                    final days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-                                    text = days[date.weekday - 1];
-                                  } else {
-                                    text = '${date.day}/${date.month}';
-                                  }
-                                  
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 5.0),
-                                    child: Text(
-                                      text,
-                                      style: const TextStyle(
-                                        color: Color(0xff68737d),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  );
+                              int index = value.toInt();
+                              if (index >= 0 && index < data.length) {
+                                final date = data[index].datetime;
+                                String text;
+                                if (period == 'Minggu') {
+                                  final days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+                                  text = days[date.weekday - 1];
+                                } else {
+                                  text = '${date.day}/${date.month}';
                                 }
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 5.0),
+                                  child: Text(
+                                    text,
+                                    style: const TextStyle(
+                                      color: Color(0xff68737d),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                );
+                              }
                             }
                             return const SizedBox.shrink();
                           },
@@ -258,64 +318,90 @@ class _HomeGraphSectionState extends State<HomeGraphSection> {
                         tooltipBgColor: SiwattColors.primary,
                         getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                           return touchedBarSpots.map((barSpot) {
+                            // barIndex 0 = data aktual, 1 = prediksi
+                            final isPrediction = barSpot.barIndex == 1;
                             String label;
-                             if (period == 'Hari') {
-                                final hour = barSpot.x.toInt();
-                                final minute = ((barSpot.x - hour) * 60).toInt();
-                                label = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-                             } else {
-                                int index = barSpot.x.toInt();
-                                if (index >= 0 && index < data.length) {
-                                  final date = data[index].datetime;
-                                  if (period == 'Minggu') {
-                                    final days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-                                    label = days[date.weekday - 1];
-                                  } else {
-                                    label = '${date.day}/${date.month}';
-                                  }
+                            if (period == 'Hari') {
+                              final hour = barSpot.x.toInt();
+                              final minute = ((barSpot.x - hour) * 60).toInt();
+                              label =
+                                  '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+                            } else {
+                              int index = barSpot.x.toInt();
+                              if (index >= 0 && index < data.length) {
+                                final date = data[index].datetime;
+                                if (period == 'Minggu') {
+                                  final days = [
+                                    'Senin',
+                                    'Selasa',
+                                    'Rabu',
+                                    'Kamis',
+                                    'Jumat',
+                                    'Sabtu',
+                                    'Minggu'
+                                  ];
+                                  label = days[date.weekday - 1];
                                 } else {
-                                  label = '';
+                                  label = '${date.day}/${date.month}';
                                 }
-                             }
-                            
+                              } else {
+                                label = '';
+                              }
+                            }
+
+                            final suffix = isPrediction ? ' (Prediksi)' : _getUnit();
                             return LineTooltipItem(
-                              '$label\n${barSpot.y.toStringAsFixed(2)}${_getUnit()}',
-                              const TextStyle(
-                                color: Colors.white,
+                              '$label\n${barSpot.y.toStringAsFixed(2)}${isPrediction ? ' kWh' : _getUnit()}${isPrediction ? '\n(Prediksi)' : ''}',
+                              TextStyle(
+                                color: isPrediction ? Colors.grey.shade200 : Colors.white,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
                             );
                           }).toList();
                         },
                       ),
                     ),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: spots,
-                        isCurved: true,
-                        color: SiwattColors.primary,
-                        barWidth: 2,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              SiwattColors.primary.withOpacity(0.5),
-                              SiwattColors.primary.withOpacity(0.1),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                    lineBarsData: lineBarsData,
                   ),
                 ),
               );
             }),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          // Legend
+          Obx(() {
+            final showPredLegend = controller.selectedPeriod.value == 'Hari' &&
+                _selectedMetric == 'Energi' &&
+                controller.predictionPoints.isNotEmpty;
+            if (!showPredLegend) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                    // simulate dashed by paint trick – just a colored box is enough for legend
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Prediksi Konsumsi (LSTM)',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: SingleChildScrollView(

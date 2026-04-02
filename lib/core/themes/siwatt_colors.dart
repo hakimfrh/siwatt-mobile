@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class SiwattColors {
   static const primary = Color(0xFF2A9D8F);
   static const primaryDark = Color(0xFF264653);
-  static const primarySoft = Color(0xFFE6F4F1);
+  static const primarySoft = Color(0xFFD1FAF5);
 
   static const accentInfo = Color(0xFFE9C46A);
   static const accentWarning = Color(0xFFF4A261);

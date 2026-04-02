@@ -5,6 +5,7 @@ import 'package:siwatt_mobile/core/models/user_model.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/features/home/models/dashboardStats.dart';
+import 'package:siwatt_mobile/features/home/models/prediction_data.dart';
 import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
 
 class HomeController extends GetxController {
@@ -13,6 +14,7 @@ class HomeController extends GetxController {
   var graphDataList = <DeviceData>[].obs;
   var selectedPeriod = 'Hari'.obs;
   var dashboardStats = Rx<DashboardStats?>(null);
+  var predictionPoints = <PredictionPoint>[].obs;
 
   User? get user => Hive.box('userBox').get('user') as User?;
   String get userName => user?.fullName.split(' ')[0] ?? 'User';
@@ -38,10 +40,14 @@ class HomeController extends GetxController {
   Future<void> refreshData() async {
     isLoading.value = true;
     try {
-      await Future.wait([
+      final futures = [
         fetchGraphData(period: selectedPeriod.value),
         fetchDashboardStats(),
-      ]);
+      ];
+      if (selectedPeriod.value == 'Hari') {
+        futures.add(fetchPredictionData());
+      }
+      await Future.wait(futures);
     } catch (e) {
       print('Error refreshing data: $e');
     } finally {
@@ -51,6 +57,11 @@ class HomeController extends GetxController {
 
   void changeGraphPeriod(String period) {
     selectedPeriod.value = period;
+    if (period != 'Hari') {
+      predictionPoints.clear();
+    } else {
+      fetchPredictionData();
+    }
     fetchGraphData(period: period);
   }
 
@@ -100,6 +111,30 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       print('Error fetching dashboard data: $e');
+    }
+  }
+
+  Future<void> fetchPredictionData() async {
+    final currentDevice = Get.find<MainController>().currentDevice;
+    if (currentDevice == null) return;
+    try {
+      // API membutuhkan tanggal KEMARIN sebagai parameter date
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final dateStr = yesterday.toIso8601String().split('T')[0];
+      final url =
+          '${ApiUrl.devicePrediction}/${currentDevice.id}/prediction?type=hourly&date=$dateStr';
+
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200 && response.data['code'] == 200) {
+        final data = PredictionData.fromJson(response.data);
+        predictionPoints.value = data.predictions;
+      } else {
+        predictionPoints.clear();
+      }
+    } catch (e) {
+      print('Error fetching prediction data: $e');
+      predictionPoints.clear();
     }
   }
 }

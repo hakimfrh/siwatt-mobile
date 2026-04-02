@@ -8,4 +8,8 @@ class ApiUrl {
   static const String dashboardData = '/api/dashboard/stats';
   static const String transactions = '/api/tokens/transactions';
   static const String correction = '/api/tokens/correction';
+  static const String sendOtp = '/auth/send-otp';
+  static const String verifyOtp = '/auth/verify-otp';
+  static const String resetPassword = '/auth/reset-password';
+  static const String devicePrediction = '/api/devices';
 }
