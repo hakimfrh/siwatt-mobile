@@ -64,6 +64,7 @@ class _TokenPageState extends State<TokenPage> {
     double? difference;
 
     showModalBottomSheet(
+      useSafeArea: true,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -71,7 +72,12 @@ class _TokenPageState extends State<TokenPage> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 20, right: 20, top: 20),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,20 +100,11 @@ class _TokenPageState extends State<TokenPage> {
                           duration: const Duration(milliseconds: 300),
                           padding: const EdgeInsets.only(bottom: 4),
                           decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: isTopUp ? SiwattColors.primary : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
+                            border: Border(bottom: BorderSide(color: isTopUp ? SiwattColors.primary : Colors.transparent, width: 2)),
                           ),
                           child: Text(
                             "TopUp",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: isTopUp ? SiwattColors.primary : Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isTopUp ? SiwattColors.primary : Colors.grey),
                           ),
                         ),
                       ),
@@ -122,20 +119,11 @@ class _TokenPageState extends State<TokenPage> {
                           duration: const Duration(milliseconds: 300),
                           padding: const EdgeInsets.only(bottom: 4),
                           decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: !isTopUp ? SiwattColors.primary : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
+                            border: Border(bottom: BorderSide(color: !isTopUp ? SiwattColors.primary : Colors.transparent, width: 2)),
                           ),
                           child: Text(
                             "Edit Saldo",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: !isTopUp ? SiwattColors.primary : Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: !isTopUp ? SiwattColors.primary : Colors.grey),
                           ),
                         ),
                       ),
@@ -212,28 +200,19 @@ class _TokenPageState extends State<TokenPage> {
                               key: const ValueKey('EditSaldo'),
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Text(
-                                  "Kwh Saat Ini",
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                                Text("Kwh Saat Ini", style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
                                 const SizedBox(height: 4),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       "${currentKwh.toStringAsFixed(2)} KwH",
-                                      style: textTheme.titleLarge
-                                          ?.copyWith(fontWeight: FontWeight.w600, color: Colors.black),
+                                      style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.black),
                                     ),
                                     if (difference != null)
                                       Text(
                                         "${difference! > 0 ? '+' : ''}${difference!.toStringAsFixed(2)} KwH",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: difference! > 0 ? Colors.green : Colors.orange,
-                                        ),
+                                        style: TextStyle(fontSize: 12, color: difference! > 0 ? Colors.green : Colors.orange),
                                       ),
                                   ],
                                 ),
@@ -301,28 +280,28 @@ class _TokenPageState extends State<TokenPage> {
                           },
                         );
                       } else {
-                         if (correctionController.text.isEmpty) {
-                            Get.snackbar("Error", "Mohon isi data", backgroundColor: Colors.green, colorText: Colors.white);
-                            return;
-                          }
-                          
-                          // Confirmation Dialog Edit Saldo
-                          Get.defaultDialog(
-                            title: "Konfirmasi",
-                            middleText: "Apakah anda yakin ingin mengubah saldo menjadi ${correctionController.text} KwH?",
-                            textConfirm: "Ya, Simpan",
-                            textCancel: "Batal",
-                            buttonColor: SiwattColors.primary,
-                            confirmTextColor: Colors.white,
-                            cancelTextColor: SiwattColors.primary,
-                            onConfirm: () async {
-                              Get.back(); // Close dialog
-                              final success = await controller.correctBalance(correctionController.text);
-                              if (success && context.mounted) {
-                                Navigator.pop(context);
-                              }
-                            },
-                          );
+                        if (correctionController.text.isEmpty) {
+                          Get.snackbar("Error", "Mohon isi data", backgroundColor: Colors.green, colorText: Colors.white);
+                          return;
+                        }
+
+                        // Confirmation Dialog Edit Saldo
+                        Get.defaultDialog(
+                          title: "Konfirmasi",
+                          middleText: "Apakah anda yakin ingin mengubah saldo menjadi ${correctionController.text} KwH?",
+                          textConfirm: "Ya, Simpan",
+                          textCancel: "Batal",
+                          buttonColor: SiwattColors.primary,
+                          confirmTextColor: Colors.white,
+                          cancelTextColor: SiwattColors.primary,
+                          onConfirm: () async {
+                            Get.back(); // Close dialog
+                            final success = await controller.correctBalance(correctionController.text);
+                            if (success && context.mounted) {
+                              Navigator.pop(context);
+                            }
+                          },
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -366,11 +345,7 @@ class _TokenPageState extends State<TokenPage> {
               ),
               const SizedBox(height: 20),
               Obx(
-                () => TokenChartCard(
-                  value: controller.tokenBalance.value.toStringAsFixed(2),
-                  unit: "KwH",
-                  dataPoints: controller.graphData.toList(),
-                ),
+                () => TokenChartCard(value: controller.tokenBalance.value.toStringAsFixed(2), unit: "KwH", dataPoints: controller.graphData.toList()),
               ),
               const SizedBox(height: 24),
               Row(
@@ -390,10 +365,7 @@ class _TokenPageState extends State<TokenPage> {
                         layoutBuilder: (currentChild, previousChildren) {
                           return Stack(
                             alignment: Alignment.centerLeft,
-                            children: <Widget>[
-                              ...previousChildren,
-                              if (currentChild != null) currentChild,
-                            ],
+                            children: <Widget>[...previousChildren, if (currentChild != null) currentChild],
                           );
                         },
                         transitionBuilder: (child, animation) {

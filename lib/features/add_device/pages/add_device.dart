@@ -13,36 +13,74 @@ class AddDevicePage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: colorScheme.onSurface),
-          onPressed: () {
-            // Ensure we clear the controller when going back
-            Get.delete<AddDeviceController>();
-            Get.back();
-          },
-        ),
-        title: Obx(() => Text(
-          controller.mode.value == AddDeviceMode.reconfigure ? 'Reconfigure Device' : 'Add New Device',
-          style: textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
+    return Obx(() {
+      return Stack(
+        children: [
+          Scaffold(
+            backgroundColor: Colors.grey[50],
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new, color: colorScheme.onSurface),
+                onPressed: () {
+                  // Ensure we clear the controller when going back
+                  Get.delete<AddDeviceController>();
+                  Get.back();
+                },
+              ),
+              title: Text(
+                controller.mode.value == AddDeviceMode.reconfigure ? 'Reconfigure Device' : 'Add New Device',
+                style: textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ),
+            body: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: controller.currentStep.value == 0
+                  ? _buildScanningStep(context, controller, colorScheme, textTheme)
+                  : _buildConfigStep(context, controller, colorScheme, textTheme),
+            ),
           ),
-        )),
-      ),
-      body: Obx(() {
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: controller.currentStep.value == 0
-              ? _buildScanningStep(context, controller, colorScheme, textTheme)
-              : _buildConfigStep(context, controller, colorScheme, textTheme),
-        );
-      }),
-    );
+          // Full-screen loading overlay
+          if (controller.isLoading.value)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.4),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(color: colorScheme.primary),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Connecting to Device...",
+                          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    });
   }
 
   Widget _buildScanningStep(
@@ -92,104 +130,67 @@ class AddDevicePage extends StatelessWidget {
                 );
               }
 
-              return Stack(
-                children: [
-                  RefreshIndicator(
-                    onRefresh: controller.scanForItems,
-                    child: controller.availableDevices.isEmpty
-                    ? Stack(
-                        children: [
-                          ListView(), 
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.wifi_off, size: 48, color: Colors.grey[400]),
-                                const SizedBox(height: 16),
-                                Text(controller.mode.value == AddDeviceMode.reconfigure 
-                                    ? "Device '${controller.existingDevice?.deviceCode ?? ''}' not found" 
-                                    : "No new devices found",
-                                  style: textTheme.bodyLarge),
-                                TextButton(
-                                  onPressed: controller.scanForItems,
-                                  child: const Text("Scan Again"),
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      ) 
-                    : ListView.separated(
-                      itemCount: controller.availableDevices.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        WifiNetwork device = controller.availableDevices[index];
-                        return Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(
-                              color: Colors.grey.shade200,
-                              width: 1,
-                            ),
-                          ),
-                          color: Colors.white,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            leading: CircleAvatar(
-                              backgroundColor: colorScheme.primaryContainer,
-                              child: Icon(Icons.bolt, color: colorScheme.primary),
-                            ),
-                            title: Text(
-                              device.ssid ?? "Unknown Device",
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text("Signal Strength: ${device.level} dBm"),
-                            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                            onTap: () {
-                              if (device.ssid != null) {
-                                controller.connectToDevice(device.ssid!);
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  if (controller.isLoading.value)
-                     Positioned.fill(
-                       child: Container(
-                         color: Colors.black.withOpacity(0.3),
-                         child: Center(
-                           child: Container(
-                             padding: const EdgeInsets.all(24),
-                             decoration: BoxDecoration(
-                               color: Colors.white,
-                               borderRadius: BorderRadius.circular(16),
-                               boxShadow: [
-                                 BoxShadow(
-                                   color: Colors.black.withOpacity(0.1),
-                                   blurRadius: 10,
-                                   spreadRadius: 2,
-                                 )
-                               ]
-                             ),
-                             child: Column(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 CircularProgressIndicator(color: colorScheme.primary),
-                                 const SizedBox(height: 16),
-                                 Text(
-                                   "Connecting to Device...", 
-                                   style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
-                                 ),
-                               ],
-                             ),
-                           ),
-                         ),
-                       ),
-                     ),
-                ],
+              return RefreshIndicator(
+                onRefresh: controller.scanForItems,
+                child: controller.availableDevices.isEmpty
+                ? Stack(
+                    children: [
+                      ListView(), 
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.wifi_off, size: 48, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text(controller.mode.value == AddDeviceMode.reconfigure 
+                                ? "Device '${controller.existingDevice?.deviceCode ?? ''}' not found" 
+                                : "No new devices found",
+                              style: textTheme.bodyLarge),
+                            TextButton(
+                              onPressed: controller.scanForItems,
+                              child: const Text("Scan Again"),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ) 
+                : ListView.separated(
+                  itemCount: controller.availableDevices.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    WifiNetwork device = controller.availableDevices[index];
+                    return Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: Colors.grey.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      color: Colors.white,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: CircleAvatar(
+                          backgroundColor: colorScheme.primaryContainer,
+                          child: Icon(Icons.bolt, color: colorScheme.primary),
+                        ),
+                        title: Text(
+                          device.ssid ?? "Unknown Device",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text("Signal Strength: ${device.level} dBm"),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () {
+                          if (device.ssid != null) {
+                            controller.connectToDevice(device.ssid!);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
               );
             }),
           ),
