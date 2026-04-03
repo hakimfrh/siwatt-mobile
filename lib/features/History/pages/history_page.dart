@@ -91,7 +91,7 @@ class HistoryPage extends StatelessWidget {
                   crossAxisCount: 3,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
-                  childAspectRatio: 1.1,
+                  childAspectRatio: 1.5,
                 ),
                 itemCount: stats.length,
                 itemBuilder: (context, index) {

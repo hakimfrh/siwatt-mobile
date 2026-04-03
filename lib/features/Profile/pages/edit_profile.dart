@@ -13,11 +13,11 @@ class EditProfile extends StatefulWidget {
 
 class _EditProfileState extends State<EditProfile> {
   final MainController mainController = Get.find<MainController>();
-  
+
   late TextEditingController _fullNameController;
   late TextEditingController _emailController;
   late TextEditingController _usernameController;
-  
+
   @override
   void initState() {
     super.initState();
@@ -44,10 +44,7 @@ class _EditProfileState extends State<EditProfile> {
       appBar: AppBar(
         title: Text(
           "Edit Profile",
-          style: textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
+          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -70,35 +67,27 @@ class _EditProfileState extends State<EditProfile> {
                     backgroundColor: SiwattColors.primarySoft,
                     child: const Icon(Icons.person, size: 50, color: SiwattColors.primary),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      height: 32,
-                      width: 32,
-                      decoration: const BoxDecoration(
-                        color: SiwattColors.primaryDark,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
-                    ),
-                  ),
+                  // Positioned(
+                  //   bottom: 0,
+                  //   right: 0,
+                  //   child: Container(
+                  //     height: 32,
+                  //     width: 32,
+                  //     decoration: const BoxDecoration(color: SiwattColors.primaryDark, shape: BoxShape.circle),
+                  //     child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
             const SizedBox(height: 32),
-            
+
             _buildReadOnlyField("Username", _usernameController),
             const SizedBox(height: 20),
-            
-            _buildTextField(
-              label: "Full Name",
-              controller: _fullNameController,
-              hint: "Enter your full name",
-              icon: Icons.person_outline,
-            ),
+
+            _buildTextField(label: "Full Name", controller: _fullNameController, hint: "Enter your full name", icon: Icons.person_outline),
             const SizedBox(height: 20),
-            
+
             _buildTextField(
               label: "Email Address",
               controller: _emailController,
@@ -107,7 +96,7 @@ class _EditProfileState extends State<EditProfile> {
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 20),
-            
+
             // Change Password Link
             InkWell(
               onTap: () {
@@ -127,10 +116,7 @@ class _EditProfileState extends State<EditProfile> {
                     const SizedBox(width: 12),
                     Text(
                       "Change Password",
-                      style: textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: SiwattColors.textPrimary,
-                      ),
+                      style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: SiwattColors.textPrimary),
                     ),
                     const Spacer(),
                     const Icon(Icons.arrow_forward_ios, size: 16, color: SiwattColors.textDisabled),
@@ -138,9 +124,9 @@ class _EditProfileState extends State<EditProfile> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 40),
-            
+
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -149,7 +135,7 @@ class _EditProfileState extends State<EditProfile> {
                   // TODO: Implement Update Logic
                   Get.back();
                   Get.snackbar(
-                    "Success", 
+                    "Success",
                     "Profile updated successfully (UI Demo)",
                     backgroundColor: SiwattColors.accentSuccess,
                     colorText: Colors.white,
@@ -160,15 +146,10 @@ class _EditProfileState extends State<EditProfile> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: SiwattColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
-                child: const Text(
-                  "Save Changes", 
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
+                child: const Text("Save Changes", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
           ],
@@ -192,18 +173,11 @@ class _EditProfileState extends State<EditProfile> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: SiwattColors.textPrimary,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: SiwattColors.textPrimary),
         ),
         const SizedBox(height: 8),
         Container(
-          decoration: BoxDecoration(
-            color: SiwattColors.input,
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration(color: SiwattColors.input, borderRadius: BorderRadius.circular(12)),
           child: TextField(
             controller: controller,
             obscureText: isPassword ? obscureText : false,
@@ -238,11 +212,7 @@ class _EditProfileState extends State<EditProfile> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: SiwattColors.textPrimary,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: SiwattColors.textPrimary),
         ),
         const SizedBox(height: 8),
         Container(

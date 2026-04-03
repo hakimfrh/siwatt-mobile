@@ -16,41 +16,40 @@ class AverageInfoCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             item.title,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 12,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.normal,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                item.value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: item.value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2.5),
-                child: Text(
-                  item.unit,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                const TextSpan(text: " "),
+                TextSpan(
+                  text: item.unit,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

@@ -22,6 +22,7 @@ class EditDevicePage extends StatefulWidget {
 class _EditDevicePageState extends State<EditDevicePage> {
   late TextEditingController _nameController;
   late TextEditingController _locationController;
+  final TextEditingController _passwordController = TextEditingController();
   late final RealtimeDeviceController _realtimeController;
 
   @override
@@ -41,34 +42,108 @@ class _EditDevicePageState extends State<EditDevicePage> {
   void dispose() {
     _nameController.dispose();
     _locationController.dispose();
+    _passwordController.dispose();
     Get.delete<RealtimeDeviceController>(tag: 'edit_device_${widget.device.id}');
     super.dispose();
   }
 
   void _handleDelete() {
-    Get.defaultDialog(
-      title: "Confirm Delete",
-      middleText: "Are you sure you want to remove this device? This action cannot be undone.",
-      textConfirm: "Remove",
-      textCancel: "Cancel",
-      confirmTextColor: Colors.white,
-      buttonColor: SiwattColors.accentDanger,
-      onConfirm: () async {
-        try {
-          final dio = Get.find<DioClient>().dio;
-          final response = await dio.delete('${ApiUrl.devices}/${widget.device.id}');
+    _passwordController.clear();
+    final isObscure = true.obs;
 
-          if (response.statusCode == 200) {
-            await Get.find<MainController>().refreshDevices();
-            Get.back(); // Close dialog
-            Get.back(); // Go back to profile
-            Get.snackbar("Success", "Device deleted", backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
-          }
-        } catch (e) {
-          Get.back(); // Close dialog
-          Get.snackbar("Error", "Failed to delete device", backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
-        }
-      }
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: SiwattColors.accentDanger, size: 24),
+            SizedBox(width: 8),
+            Text(
+              "Confirm Delete",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Are you sure you want to remove this device? This action cannot be undone.",
+              style: TextStyle(fontSize: 14, color: SiwattColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "Enter your password to confirm:",
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: SiwattColors.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            Obx(() => TextField(
+              controller: _passwordController,
+              obscureText: isObscure.value,
+              style: const TextStyle(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: "Password",
+                hintStyle: const TextStyle(color: SiwattColors.textDisabled, fontSize: 14),
+                prefixIcon: const Icon(Icons.lock_outline, color: SiwattColors.textSecondary, size: 20),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    isObscure.value ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: SiwattColors.textSecondary,
+                    size: 20,
+                  ),
+                  onPressed: () => isObscure.value = !isObscure.value,
+                ),
+                filled: true,
+                fillColor: SiwattColors.input,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text("Cancel", style: TextStyle(color: SiwattColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SiwattColors.accentDanger,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+            onPressed: () async {
+              if (_passwordController.text.isEmpty) {
+                Get.snackbar("Error", "Password cannot be empty", backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
+                return;
+              }
+              try {
+                final dio = Get.find<DioClient>().dio;
+                final response = await dio.delete(
+                  '${ApiUrl.devices}/${widget.device.id}',
+                  data: {"password": _passwordController.text},
+                );
+
+                if (response.statusCode == 200) {
+                  await Get.find<MainController>().refreshDevices();
+                  Get.back(); // Close dialog
+                  Get.back(); // Go back to profile
+                  Get.snackbar("Success", "Device deleted", backgroundColor: SiwattColors.accentSuccess, colorText: Colors.white);
+                }
+              } catch (e) {
+                Get.back(); // Close dialog
+                Get.snackbar("Error", "Failed to delete device. Check your password.", backgroundColor: SiwattColors.accentDanger, colorText: Colors.white);
+              }
+            },
+            child: const Text("Remove", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 
