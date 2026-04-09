@@ -330,6 +330,7 @@ class _TokenPageState extends State<TokenPage> {
         onRefresh: () async {
           await controller.fetchTransactions(isRefresh: true);
           await controller.fetchGraphData();
+          await controller.fetchDailyPrediction();
           await Get.find<MainController>().getDevices();
         },
         child: SingleChildScrollView(
@@ -345,7 +346,12 @@ class _TokenPageState extends State<TokenPage> {
               ),
               const SizedBox(height: 20),
               Obx(
-                () => TokenChartCard(value: controller.tokenBalance.value.toStringAsFixed(2), unit: "KwH", dataPoints: controller.graphData.toList()),
+                () => TokenChartCard(
+                  value: controller.tokenBalance.value.toStringAsFixed(2),
+                  unit: "KwH",
+                  dataPoints: controller.graphData.toList(),
+                  predictionPoints: controller.predictionSpots.toList(),
+                ),
               ),
               const SizedBox(height: 24),
               Row(

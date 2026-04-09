@@ -7,6 +7,7 @@ import 'package:siwatt_mobile/core/models/token_transaction.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
+import 'package:siwatt_mobile/features/token/models/daily_prediction_data.dart';
 
 class TransactionController extends GetxController{
  final dio = Get.find<DioClient>().dio;
@@ -16,6 +17,8 @@ class TransactionController extends GetxController{
   var tokenBalance = 0.0.obs;
   var totalKwh = 0.0.obs;
   var totalCost = 0.0.obs;
+  // Titik prediksi saldo token untuk 7 hari ke depan
+  var predictionSpots = <DailyPredictionPoint>[].obs;
 
   // Pagination Variables
   var currentPage = 1;
@@ -30,10 +33,12 @@ class TransactionController extends GetxController{
     ever(Get.find<MainController>().currentDeviceIndex, (_) {
       fetchTransactions(isRefresh: true);
       fetchGraphData();
+      fetchDailyPrediction();
     });
 
     fetchTransactions(isRefresh: true);
     fetchGraphData();
+    fetchDailyPrediction();
   }
 
   Future<bool> addTransaction(String amountKwh, String price) async {
@@ -80,6 +85,71 @@ class TransactionController extends GetxController{
       }
     } catch (e) {
       print('Error fetching graph data: $e');
+    }
+  }
+
+  /// Fetch prediksi harian konsumsi listrik dan hitung estimasi sisa token.
+  /// Menggunakan saldo akhir data aktual sebagai titik awal, lalu kurangi
+  /// energy_day setiap hari prediksi. Berhenti jika saldo sudah ≤ 0.
+  /// Maksimal 7 hari ke depan.
+  Future<void> fetchDailyPrediction() async {
+    try {
+      final deviceId = Get.find<MainController>().currentDevice?.id;
+      if (deviceId == null) return;
+
+      // date parameter = hari ini
+      final today = DateTime.now();
+      final dateStr = DateFormat('yyyy-MM-dd').format(today);
+      final url = '${ApiUrl.devicePrediction}/$deviceId/prediction?type=daily&date=$dateStr';
+
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200 && response.data['code'] == 200) {
+        final rawPredictions =
+            (response.data['data']['prediction']['predictions'] as List<dynamic>)
+                .map((e) => DailyPredictionPoint.fromJson(e))
+                .toList();
+
+        // Ambil saldo akhir dari data aktual grafik
+        // Jika graphData kosong gunakan tokenBalance
+        double lastBalance = graphData.isNotEmpty
+            ? graphData.last.balance
+            : tokenBalance.value;
+
+        // Tanggal akhir data aktual — prediksi dimulai dari hari berikutnya
+        DateTime? lastActualDate = graphData.isNotEmpty ? graphData.last.datetime : null;
+
+        // Filter prediksi: hanya hari setelah data aktual, maks 7 hari
+        final lastDate = lastActualDate;
+        List<DailyPredictionPoint> filtered = rawPredictions.where((p) {
+          if (lastDate == null) return true;
+          // Bandingkan hanya tanggal (tanpa jam)
+          final d = DateTime(p.date.year, p.date.month, p.date.day);
+          final last = DateTime(lastDate.year, lastDate.month, lastDate.day);
+          return d.isAfter(last);
+        }).take(7).toList();
+
+        // Hitung saldo berjalan, stop saat ≤ 0
+        final computed = <DailyPredictionPoint>[];
+        double runningBalance = lastBalance;
+        for (final p in filtered) {
+          final dailyUsage = p.energyDay; // konsumsi asli dari API
+          runningBalance -= dailyUsage;
+          if (runningBalance <= 0) {
+            // Tambahkan titik terakhir di 0 sbg batas, lalu berhenti
+            computed.add(DailyPredictionPoint(date: p.date, energyDay: 0, usage: dailyUsage));
+            break;
+          }
+          computed.add(DailyPredictionPoint(date: p.date, energyDay: runningBalance, usage: dailyUsage));
+        }
+
+        predictionSpots.assignAll(computed);
+      } else {
+        predictionSpots.clear();
+      }
+    } catch (e) {
+      print('Error fetching daily prediction: $e');
+      predictionSpots.clear();
     }
   }
 
