@@ -267,11 +267,10 @@ class AddDevicePage extends StatelessWidget {
             const SizedBox(height: 16),
              _buildTextField(
               controller: controller.wifiPassController,
-              label: "WiFi Password",
+              label: "WiFi Password (kosongkan jika tidak ada)",
               icon: Icons.lock_outline,
               isPassword: true,
               colorScheme: colorScheme,
-               validator: (v) => v?.isNotEmpty == true ? null : "Required",
             ),
             
              if (controller.mode.value == AddDeviceMode.add) ...[
