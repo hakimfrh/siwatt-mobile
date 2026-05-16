@@ -12,4 +12,5 @@ class ApiUrl {
   static const String verifyOtp = '/auth/verify-otp';
   static const String resetPassword = '/auth/reset-password';
   static const String devicePrediction = '/api/devices';
+  static const String tokenPrices = '/api/tokens/prices';
 }

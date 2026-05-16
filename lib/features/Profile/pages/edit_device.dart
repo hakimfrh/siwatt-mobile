@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:siwatt_mobile/core/models/devices.dart';
+import 'package:siwatt_mobile/core/models/token_price.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/core/network/dio_controller.dart';
 import 'package:siwatt_mobile/core/network/api_url.dart';
@@ -25,14 +26,39 @@ class _EditDevicePageState extends State<EditDevicePage> {
   final TextEditingController _passwordController = TextEditingController();
   late final RealtimeDeviceController _realtimeController;
 
+  List<TokenPrice> _tokenPrices = [];
+  int? _selectedPriceId;
+  bool _isLoadingPrices = true;
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.device.deviceName);
     _locationController = TextEditingController(text: widget.device.location);
+    _selectedPriceId = widget.device.priceId;
 
     // Initialize realtime controller for this specific device
     _realtimeController = Get.put(RealtimeDeviceController(widget.device.id), tag: 'edit_device_${widget.device.id}');
+
+    _fetchTokenPrices();
+  }
+
+  Future<void> _fetchTokenPrices() async {
+    setState(() => _isLoadingPrices = true);
+    try {
+      final dio = Get.find<DioClient>().dio;
+      final response = await dio.get(ApiUrl.tokenPrices);
+      if (response.statusCode == 200) {
+        final List data = response.data['data'] as List;
+        setState(() {
+          _tokenPrices = data.map((e) => TokenPrice.fromJson(e as Map<String, dynamic>)).toList();
+        });
+      }
+    } catch (_) {
+      // silently fail — dropdown will stay empty
+    } finally {
+      setState(() => _isLoadingPrices = false);
+    }
   }
 
   @override
@@ -165,7 +191,11 @@ class _EditDevicePageState extends State<EditDevicePage> {
       final dio = Get.find<DioClient>().dio;
       final response = await dio.put(
         '${ApiUrl.devices}/${widget.device.id}',
-        data: {"device_name": _nameController.text, "location": _locationController.text},
+        data: {
+          "device_name": _nameController.text,
+          "location": _locationController.text,
+          "price_id": _selectedPriceId,
+        },
       );
 
       if (response.statusCode == 200) {
@@ -287,6 +317,9 @@ class _EditDevicePageState extends State<EditDevicePage> {
             const SizedBox(height: 20),
 
             _buildTextField(label: "Location", controller: _locationController, hint: "e.g. Home - 1st Floor", icon: Icons.location_on_outlined),
+            const SizedBox(height: 20),
+
+            _buildPriceDropdown(),
 
             const SizedBox(height: 40),
 
@@ -353,6 +386,83 @@ class _EditDevicePageState extends State<EditDevicePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPriceDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Electricity Tariff",
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: SiwattColors.textPrimary),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(color: SiwattColors.input, borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _isLoadingPrices
+              ? const SizedBox(
+                  height: 50,
+                  child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                )
+              : DropdownButtonHideUnderline(
+                  child: DropdownButton<int?>(
+                    value: (_selectedPriceId != null && _tokenPrices.any((p) => p.id == _selectedPriceId))
+                        ? _selectedPriceId
+                        : null,
+                    isExpanded: true,
+                    hint: const Row(
+                      children: [
+                        Icon(Icons.bolt_outlined, color: SiwattColors.textSecondary, size: 20),
+                        SizedBox(width: 12),
+                        Text("No tariff selected", style: TextStyle(color: SiwattColors.textDisabled, fontSize: 14)),
+                      ],
+                    ),
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: SiwattColors.textSecondary),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: SiwattColors.textPrimary),
+                    onChanged: (value) => setState(() => _selectedPriceId = value),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Row(
+                          children: [
+                            Icon(Icons.remove_circle_outline, color: SiwattColors.textSecondary, size: 20),
+                            SizedBox(width: 12),
+                            Text("No tariff", style: TextStyle(color: SiwattColors.textSecondary)),
+                          ],
+                        ),
+                      ),
+                      ..._tokenPrices.map(
+                        (price) => DropdownMenuItem<int?>(
+                          value: price.id,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.bolt_outlined, color: SiwattColors.textSecondary, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(price.code, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                    Text(
+                                      "${price.details}  •  Rp ${NumberFormat('#,###', 'id_ID').format(price.pricePerKwh)}/kWh",
+                                      style: const TextStyle(fontSize: 11, color: SiwattColors.textSecondary),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+        ),
+      ],
     );
   }
 

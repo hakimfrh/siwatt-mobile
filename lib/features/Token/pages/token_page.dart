@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:siwatt_mobile/core/models/devices.dart';
 import 'package:siwatt_mobile/core/themes/siwatt_colors.dart';
 import 'package:siwatt_mobile/features/main/controllers/main_controller.dart';
 import 'package:siwatt_mobile/features/token/controllers/transaction_controller.dart';
@@ -143,58 +145,11 @@ class _TokenPageState extends State<TokenPage> {
                         return FadeTransition(opacity: animation, child: child);
                       },
                       child: isTopUp
-                          ? Column(
+                          ? _TopUpForm(
                               key: const ValueKey('TopUp'),
-                              children: [
-                                TextField(
-                                  controller: priceController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.grey[100],
-                                    labelText: 'Harga',
-                                    prefixIcon: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Image.asset('assets/icons/money-in.png', width: 24, height: 24),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: Colors.blue),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: Colors.grey),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: Colors.blue, width: 2),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                TextField(
-                                  controller: amountController,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.grey[100],
-                                    labelText: 'Jumlah Kwh',
-                                    prefixIcon: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Image.asset('assets/icons/bolt-circle.png', width: 24, height: 24),
-                                    ),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: Colors.transparent),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: Colors.blue, width: 2),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              priceController: priceController,
+                              amountController: amountController,
+                              onPriceTaxUpdate: (newTax) => controller.updateDevicePriceTax(newTax),
                             )
                           : Column(
                               key: const ValueKey('EditSaldo'),
@@ -220,6 +175,9 @@ class _TokenPageState extends State<TokenPage> {
                                 TextField(
                                   controller: correctionController,
                                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                                  ],
                                   onChanged: (val) {
                                     double? newVal = double.tryParse(val);
                                     setModalState(() {
@@ -234,6 +192,7 @@ class _TokenPageState extends State<TokenPage> {
                                     filled: true,
                                     fillColor: Colors.grey[100],
                                     labelText: 'Jumlah Kwh',
+                                    hintText: 'Contoh: 10.5',
                                     prefixIcon: Padding(
                                       padding: const EdgeInsets.all(12.0),
                                       child: Image.asset('assets/icons/bolt-circle.png', width: 24, height: 24),
@@ -261,6 +220,16 @@ class _TokenPageState extends State<TokenPage> {
                           Get.snackbar("Error", "Mohon isi semua data", backgroundColor: Colors.red, colorText: Colors.white);
                           return;
                         }
+                        final parsedPrice = int.tryParse(priceController.text);
+                        final parsedAmount = double.tryParse(amountController.text);
+                        if (parsedPrice == null || parsedPrice <= 0) {
+                          Get.snackbar("Error", "Harga harus berupa angka positif", backgroundColor: Colors.red, colorText: Colors.white);
+                          return;
+                        }
+                        if (parsedAmount == null || parsedAmount <= 0) {
+                          Get.snackbar("Error", "Jumlah KwH harus berupa angka positif", backgroundColor: Colors.red, colorText: Colors.white);
+                          return;
+                        }
 
                         // Confirmation Dialog TopUp
                         Get.defaultDialog(
@@ -281,7 +250,12 @@ class _TokenPageState extends State<TokenPage> {
                         );
                       } else {
                         if (correctionController.text.isEmpty) {
-                          Get.snackbar("Error", "Mohon isi data", backgroundColor: Colors.green, colorText: Colors.white);
+                          Get.snackbar("Error", "Mohon isi data", backgroundColor: Colors.red, colorText: Colors.white);
+                          return;
+                        }
+                        final parsedCorrection = double.tryParse(correctionController.text);
+                        if (parsedCorrection == null || parsedCorrection < 0) {
+                          Get.snackbar("Error", "Jumlah KwH tidak boleh negatif", backgroundColor: Colors.red, colorText: Colors.white);
                           return;
                         }
 
@@ -440,6 +414,244 @@ class _TokenPageState extends State<TokenPage> {
         backgroundColor: SiwattColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+    );
+  }
+}
+
+// ─── TopUp Form Widget ────────────────────────────────────────────────────────
+
+class _TopUpForm extends StatefulWidget {
+  final TextEditingController priceController;
+  final TextEditingController amountController;
+  final void Function(double newTax) onPriceTaxUpdate;
+
+  const _TopUpForm({
+    super.key,
+    required this.priceController,
+    required this.amountController,
+    required this.onPriceTaxUpdate,
+  });
+
+  @override
+  State<_TopUpForm> createState() => _TopUpFormState();
+}
+
+class _TopUpFormState extends State<_TopUpForm> {
+  bool _autoCalcKwh = true;
+
+  Device? get _device => Get.find<MainController>().currentDevice;
+  double? get _pricePerKwh => _device?.tokenPrice?.pricePerKwh;
+  double get _priceTax => _device?.priceTax ?? 0.0;
+
+  /// Hitung kWh otomatis dari nominal & tarif:
+  /// kWh = (nominal × (1 - price_tax)) / tarif_per_kwh
+  void _recalcKwh() {
+    final nominal = double.tryParse(widget.priceController.text);
+    final tariff = _pricePerKwh;
+    if (nominal == null || tariff == null || tariff == 0) return;
+    final kwh = (nominal * (1 - _priceTax)) / tariff;
+    widget.amountController.text = kwh.toStringAsFixed(4);
+  }
+
+  /// Hitung deduction_rate dari kWh manual:
+  /// deduction_rate = 1 − (kWh × tariff) / nominal
+  double? _calcDeductionRate() {
+    final nominal = double.tryParse(widget.priceController.text);
+    final kwh = double.tryParse(widget.amountController.text);
+    final tariff = _pricePerKwh;
+    if (nominal == null || kwh == null || tariff == null || nominal == 0) return null;
+    return 1 - (kwh * tariff) / nominal;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasTariff = _pricePerKwh != null;
+    final taxPercent = (_priceTax * 100).toStringAsFixed(2);
+    final currencyFmt = NumberFormat('#,###', 'id_ID');
+
+    return Column(
+      key: const ValueKey('TopUp'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ── Tariff info banner ───────────────────────────────────────────────
+        if (hasTariff) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: SiwattColors.primary.withAlpha(20),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: SiwattColors.primary.withAlpha(60)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.bolt, color: SiwattColors.primary, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_device!.tokenPrice!.code} — ${_device!.tokenPrice!.details}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: SiwattColors.primaryDark),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            'Rp ${currencyFmt.format(_pricePerKwh)}/kWh',
+                            style: const TextStyle(fontSize: 12, color: SiwattColors.textSecondary),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withAlpha(30),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Pajak $taxPercent%',
+                              style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // ── Harga field ──────────────────────────────────────────────────────
+        TextField(
+          controller: widget.priceController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: (_) {
+            if (_autoCalcKwh) {
+              final nominal = double.tryParse(widget.priceController.text);
+              final tariff = _pricePerKwh;
+              if (nominal != null && tariff != null && tariff != 0) {
+                final kwh = (nominal * (1 - _priceTax)) / tariff;
+                final kwhStr = kwh.toStringAsFixed(4);
+                // Update controller text after the current frame to avoid
+                // modifying state during build
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) widget.amountController.text = kwhStr;
+                });
+              } else {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) widget.amountController.clear();
+                });
+              }
+              setState(() {});
+            }
+          },
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey[100],
+            labelText: 'Harga',
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Image.asset('assets/icons/money-in.png', width: 24, height: 24),
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.blue)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.grey)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.blue, width: 2)),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // ── Checkbox auto-hitung kWh ─────────────────────────────────────────
+        if (hasTariff)
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () {
+              setState(() {
+                _autoCalcKwh = !_autoCalcKwh;
+                if (_autoCalcKwh) {
+                  _recalcKwh();
+                } else {
+                  widget.amountController.clear();
+                }
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: _autoCalcKwh,
+                      activeColor: SiwattColors.primary,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onChanged: (val) {
+                        setState(() {
+                          _autoCalcKwh = val ?? true;
+                          if (_autoCalcKwh) {
+                            _recalcKwh();
+                          } else {
+                            widget.amountController.clear();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Nominal kWh sesuai dengan yang dibeli',
+                    style: TextStyle(fontSize: 13, color: SiwattColors.textPrimary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 8),
+
+        // ── Jumlah kWh field ─────────────────────────────────────────────────
+        TextField(
+          controller: widget.amountController,
+          enabled: !_autoCalcKwh,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+          onChanged: (_) {
+            if (!_autoCalcKwh) {
+              final rate = _calcDeductionRate();
+              if (rate != null && rate >= 0 && rate < 1) {
+                widget.onPriceTaxUpdate(rate);
+              }
+              setState(() {}); // rebuild to show deduction preview
+            }
+          },
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: _autoCalcKwh ? Colors.grey[200] : Colors.grey[100],
+            labelText: 'Jumlah kWh',
+            hintText: _autoCalcKwh ? 'Dihitung otomatis' : 'Contoh: 10.5',
+            hintStyle: TextStyle(color: _autoCalcKwh ? Colors.grey[400] : Colors.grey[500], fontSize: 13),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Image.asset('assets/icons/bolt-circle.png', width: 24, height: 24),
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: _autoCalcKwh ? Colors.transparent : Colors.blue),
+            ),
+            disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.blue, width: 2)),
+            // Preview deduction rate when manually entered
+            suffixText: !_autoCalcKwh && _calcDeductionRate() != null
+                ? 'Pajak ${(_calcDeductionRate()! * 100).toStringAsFixed(2)}%'
+                : null,
+            suffixStyle: const TextStyle(fontSize: 11, color: Colors.orange),
+          ),
+        ),
+      ],
     );
   }
 }

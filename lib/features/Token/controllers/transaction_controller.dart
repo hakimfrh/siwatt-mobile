@@ -68,6 +68,21 @@ class TransactionController extends GetxController{
       return false;
     }
   }
+
+  /// Update price_tax device ke API ketika user memasukkan nominal kWh manual.
+  Future<void> updateDevicePriceTax(double newTax) async {
+    try {
+      final device = Get.find<MainController>().currentDevice;
+      if (device == null) return;
+      await dio.put(
+        '${ApiUrl.devices}/${device.id}',
+        data: {"price_tax": newTax},
+      );
+    } catch (e) {
+      print('Error updating price_tax: $e');
+    }
+  }
+
   Future<void> fetchGraphData() async {
     try {
       final deviceId = Get.find<MainController>().currentDevice?.id ?? 1;
